@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ssv;
+
+service Smoke2d {
+	rpc Init(Smoke2dInitParams) returns (Result) {}
+}
+
+message Smoke2dInitParams {
+	uint32 nx = 1;
+	uint32 ny = 2;
+}
+
+message Result {
+	uint32 status = 1;
+}
+

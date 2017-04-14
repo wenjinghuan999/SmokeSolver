@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <GRPC_HOME>D:\Pkgs\grpc-windows\grpc</GRPC_HOME>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(GRPC_HOME)\include;$(GRPC_HOME)\third_party\protobuf\src;$(IncludePath)</IncludePath>
+    <LibraryPath>$(GRPC_HOME)\bin\protobuf\debug;$(GRPC_HOME)\bin\grpc\debug;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>libprotobufd.lib;gpr.lib;grpc.lib;grpc++.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>for %%f in (*.proto) do (
+$(GRPC_HOME)\bin\protobuf\release\protoc.exe -I . --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_HOME)\bin\grpc_protoc_plugins\grpc_cpp_plugin.exe %%f
+$(GRPC_HOME)\bin\protobuf\release\protoc.exe -I . --cpp_out=. %%f
+)</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="GRPC_HOME">
+      <Value>$(GRPC_HOME)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
