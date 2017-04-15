@@ -12,7 +12,7 @@ Smoke2dSolver::~Smoke2dSolver()
 
 }
 
-void Smoke2dSolver::setSize(size_t nx, size_t ny)
+void Smoke2dSolver::setSize(uint nx, uint ny)
 {
 	if (nx == 0 || ny == 0)
 	{

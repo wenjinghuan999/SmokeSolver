@@ -19,19 +19,21 @@ BlobBase::~BlobBase()
 	reset();
 }
 
-void BlobBase::setSize(size_t nx, size_t ny, size_t nz,
+void BlobBase::setSize(size_t nx_in_bytes, uint ny, uint nz,
 	int gpu_device, bool cpu_copy)
 {
-	if (nx == 0 || ny == 0)
+	if (nx_in_bytes == 0 || ny == 0)
 	{
 		throw SSV_ERROR_INVALID_VALUE;
 	}
 	
 	reset();
 
-	_nx_in_bytes = nx; _ny = ny; _nz = nz;
-	_storage_gpu_device = gpu_device;
+	_nx_in_bytes = nx_in_bytes;
+	_ny = ny; 
+	_nz = nz;
 	_size_in_bytes = _nx_in_bytes * _ny * _nz;
+	_storage_gpu_device = gpu_device;
 
 	if (cpu_copy)
 	{

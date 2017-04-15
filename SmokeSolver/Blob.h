@@ -11,6 +11,15 @@
 
 namespace ssv
 {
+	template <typename>
+	class Blob;
+	template <typename>
+	struct BlobWrapper;
+	template <typename>
+	struct BlobWrapperConst;
+
+	// Basic data structure
+	// Contains 2D or 3D data on CPU/GPU and provides managed texture objects
 	template <typename _T>
 	class Blob
 		: public BlobBase
@@ -20,7 +29,7 @@ namespace ssv
 		// nx, ny, nz: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
-		virtual void setSize(size_t nx, size_t ny, size_t nz = 1u, int gpu_device = 0, bool cpu_copy = true)
+		void setSize(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, bool cpu_copy = true)
 		{
 			BlobBase::setSize(nx * sizeof(_T), ny, nz, gpu_device, cpu_copy);
 		}
@@ -33,8 +42,8 @@ namespace ssv
 		// default texDesc: clamp addr mode, linear filter, not normalized
 		virtual cudaTextureObject_t data_texture_2d(
 			const cudaTextureDesc *texDesc = nullptr,
-			size_t layer_id = 0
-		)
+			uint layer_id = 0
+		) const override
 		{
 			if (texDesc == nullptr && layer_id == 0)
 			{
@@ -46,7 +55,7 @@ namespace ssv
 
 			cudaChannelFormatDesc sChannelDesc = cudaCreateChannelDesc<_T>();
 			texture_param_t params = _MakeTextureParam(
-				2, texDesc, &sChannelDesc, layer_id
+				texDesc, &sChannelDesc, 2u, layer_id
 			);
 			auto iter = _data_textures.find(params);
 			if (iter != _data_textures.end())
@@ -76,7 +85,7 @@ namespace ssv
 		// default texDesc: clamp addr mode, linear filter, not normalized
 		virtual cudaTextureObject_t data_texture_3d(
 			const cudaTextureDesc *texDesc = nullptr
-		)
+		) const override
 		{
 			if (texDesc == nullptr)
 			{
@@ -88,7 +97,7 @@ namespace ssv
 			}
 			cudaChannelFormatDesc sChannelDesc = cudaCreateChannelDesc<_T>();
 			texture_param_t params = _MakeTextureParam(
-				3, texDesc, &sChannelDesc, 0
+				texDesc, &sChannelDesc, 3u, 0
 			);
 			auto iter = _data_textures.find(params);
 			if (iter != _data_textures.end())
@@ -114,43 +123,107 @@ namespace ssv
 
 	public:
 		// Return nx (in elements)
-		virtual size_t nx() const override
+		virtual uint nx() const override
 		{
-			return _nx_in_bytes / sizeof(_T);
+			return (uint)(_nx_in_bytes / sizeof(_T));
 		}
 
 		// Return total number of elements 
 		// ( = nx() * ny() * nz())
-		virtual size_t numel() const override
+		virtual uint numel() const override
 		{
-			return _size_in_bytes / sizeof(_T);
+			return (uint)(_size_in_bytes / sizeof(_T));
 		}
 
 		// Return pitch in elements
 		// Total memory allocated = pitch_in_elements * ny * nz * sizeof(_T)
-		size_t pitch_in_elements() const
+		virtual uint pitch_in_elements() const override
 		{
-			return _data_gpu.pitch / sizeof(_T);
+			return (uint)(_data_gpu.pitch / sizeof(_T));
 		}
 
 		// Raw pointer of CPU data
-		_T *data_cpu()
+		_T *data_cpu() const
 		{
 			return static_cast<_T *>(_data_cpu);
 		}
 
 		// pitched_ptr of GPU data
-		pitched_ptr<_T> data_gpu()
+		pitched_ptr<_T> data_gpu() const
 		{
 			return pitched_ptr<_T>(&_data_gpu);
 		}
 
 		// Raw pointer of GPU data
-		_T *data_gpu_raw()
+		_T *data_gpu_raw() const
 		{
 			return static_cast<_T *>(_data_gpu.ptr);
 		}
-};
+
+		// Return BlobWrapper of this Blob
+		BlobWrapper<_T> helper() 
+		{
+			return BlobWrapper<_T> {
+				static_cast<_T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
+					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
+		}
+
+		// Return BlobWrapperConst of this Blob
+		BlobWrapperConst<_T> helper_const() const
+		{
+			return BlobWrapperConst<_T> {
+				static_cast<const _T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
+					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
+		}
+	};
+
+
+	// A light-weighted helper class for easier kernel implementation using Blob
+	template <typename _T>
+	struct BlobWrapper
+	{
+		_T *ptr;
+		uint pitch;
+		uint nx;
+		uint ny;
+		uint nz;
+
+		operator BlobWrapperConst<_T>() const
+		{
+			return BlobWrapperConst<_T> { ptr, pitch, nx, ny, nz };
+		}
+
+		__device__ _T &operator()(uint x, uint y, uint z)
+		{
+			return ptr[z * pitch * ny + y * pitch + x];
+		}
+
+		__device__ _T &operator()(uint x, uint y)
+		{
+			return ptr[y * pitch + x];
+		}
+	};
+
+	// A light-weighted helper class for easier kernel implementation using Blob
+	template <typename _T>
+	struct BlobWrapperConst
+	{
+		const _T *ptr;
+		uint pitch;
+		uint nx;
+		uint ny;
+		uint nz;
+
+		__device__ const _T &operator () (uint x, uint y, uint z)
+		{
+			return ptr[z * pitch * ny + y * pitch + x];
+		}
+
+		__device__ const _T &operator () (uint x, uint y)
+		{
+			return ptr[y * pitch + x];
+		}
+	};
 }
 
 

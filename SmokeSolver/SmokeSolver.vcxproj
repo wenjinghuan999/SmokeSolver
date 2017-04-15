@@ -101,6 +101,8 @@
     <ClInclude Include="AdvectionMethod.h" />
     <ClInclude Include="Blob.h" />
     <ClInclude Include="BlobBase.h" />
+    <ClInclude Include="EulerMethod.h" />
+    <ClInclude Include="hash_tuple.h" />
     <ClInclude Include="pitched_ptr.h" />
     <ClInclude Include="common.cuh" />
     <ClInclude Include="common.h" />
@@ -110,10 +112,12 @@
     <ClInclude Include="SmokeSolver.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="AdvectionMethod.cu" />
     <CudaCompile Include="BlobBase.cu">
       <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </AdditionalDeps>
     </CudaCompile>
+    <CudaCompile Include="EulerMethod.cu" />
     <CudaCompile Include="Smoke2dSolver.cu">
       <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </AdditionalDeps>

@@ -16,7 +16,7 @@ namespace ssv
 		~Smoke2dSolver();
 	
 	public:
-		void setSize(size_t nx, size_t ny);
+		void setSize(uint nx, uint ny);
 		//void setEulerMethod();
 		//void setAdvectionMethod();
 		//void setProjectionMethod();
@@ -32,7 +32,7 @@ namespace ssv
 		void _DestroyCuda();
 	
 	private:
-		size_t _nx, _ny;
+		uint _nx, _ny;
 		Blob<T> _data;
 	};
 }

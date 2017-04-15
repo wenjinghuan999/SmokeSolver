@@ -31,6 +31,9 @@
     <Filter Include="AdvectionMethod">
       <UniqueIdentifier>{f95ac5e4-9c3e-4822-8bf5-a44e6cd4e111}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EulerMethod">
+      <UniqueIdentifier>{4cbde66d-35b0-4c5f-af33-cef779050d3e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -86,6 +89,12 @@
     <ClInclude Include="AdvectionMethod.h">
       <Filter>AdvectionMethod</Filter>
     </ClInclude>
+    <ClInclude Include="EulerMethod.h">
+      <Filter>EulerMethod</Filter>
+    </ClInclude>
+    <ClInclude Include="hash_tuple.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Smoke2dSolver.cu">
@@ -93,6 +102,12 @@
     </CudaCompile>
     <CudaCompile Include="BlobBase.cu">
       <Filter>Blob</Filter>
+    </CudaCompile>
+    <CudaCompile Include="AdvectionMethod.cu">
+      <Filter>AdvectionMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="EulerMethod.cu">
+      <Filter>EulerMethod</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

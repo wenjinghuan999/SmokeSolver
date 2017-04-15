@@ -5,6 +5,9 @@ using namespace ssv;
 
 #include "pitched_ptr.h"
 
+#include "AdvectionMethod.h"
+#include "EulerMethod.h"
+
 #include <iostream>
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>
@@ -69,13 +72,13 @@ void Smoke2dSolver::_StepCuda()
 	std::cout << std::endl;
 	_data.copyToGpu();
 
-	cudaPitchedPtr *ppp = _data.data_gpu_cuda_pitched_ptr();
+	const cudaPitchedPtr *ppp = _data.data_gpu_cuda_pitched_ptr();
 	T *pd = _data.data_gpu_raw();
 	Print(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 
 	Blob<T> another;
 	another.setSize(5, 2, 3);
-	cudaPitchedPtr *ppap = another.data_gpu_cuda_pitched_ptr();
+	const cudaPitchedPtr *ppap = another.data_gpu_cuda_pitched_ptr();
 
 	cudaTextureObject_t texObj = _data.data_texture_3d();
 	
@@ -107,8 +110,16 @@ void Smoke2dSolver::_StepCuda()
 	_data.copyToCpu();
 	p = _data.data_cpu();
 
+	Blob<T2> u;
+	u.setSize(5, 2, 3);
 
+	AdvectionMethod2dSemiLagrangian<T> adv_lag;
+	AdvectionMethod2d<T> &adv = adv_lag;
+	adv(another, _data, u);
 
+	EulerMethodForward<T> euler_forward;
+	EulerMethod<T> &euler = euler_forward;
+	euler(another, another);
 
 
 	std::cout << std::endl;
@@ -144,9 +155,6 @@ void Smoke2dSolver::_StepCuda()
 	texObj = _data.data_texture_3d();
 	std::cout << "TEX: " << texObj << std::endl;
 
-	kernelWWW<<<2, 5>>>(texObj, *ppap);
-
-	cudaDeviceSynchronize();
 
 	Print(another.data_gpu_raw(), another.pitch_in_elements() * another.ny() * another.nz(), "data:\n");
 	another.copyToCpu();

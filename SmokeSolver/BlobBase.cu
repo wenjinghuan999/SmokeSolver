@@ -102,46 +102,18 @@ void BlobBase::destroyTexture(cudaTextureObject_t texture_object)
 	}
 }
 
-BlobBase::texture_param_t BlobBase::_MakeTextureParam(
-	unsigned char dimension, const cudaTextureDesc * texDesc,
-	const cudaChannelFormatDesc * channelDesc, size_t layer_id
-)
-{
-	struct cudaTextureDesc sTexDesc;
-	if (texDesc == nullptr)
-	{
-		memset(&sTexDesc, 0, sizeof(sTexDesc));
-		sTexDesc.addressMode[0] = cudaAddressModeClamp;
-		sTexDesc.addressMode[1] = cudaAddressModeClamp;
-		sTexDesc.addressMode[2] = cudaAddressModeClamp;
-		sTexDesc.filterMode = cudaFilterModeLinear;
-		sTexDesc.readMode = cudaReadModeElementType;
-		sTexDesc.normalizedCoords = 0;
-		texDesc = &sTexDesc;
-	}
-
-	cudaChannelFormatDesc sChannelDesc;
-	if (channelDesc == nullptr)
-	{
-		sChannelDesc = cudaCreateChannelDesc<byte>();
-		channelDesc = &sChannelDesc;
-	}
-
-	return std::make_tuple(dimension, *texDesc, *channelDesc, layer_id);
-}
-
 cudaTextureObject_t BlobBase::_CreateTexture2d(
 	const texture_param_t &params
-)
+) const
 {
 	unsigned char dimension;
 	struct cudaTextureDesc sTexDesc;
 	cudaChannelFormatDesc sChannelDesc; 
 	size_t layer_id;
 
-	std::tie(dimension, sTexDesc, sChannelDesc, layer_id) = params;
+	std::tie(sTexDesc, sChannelDesc, dimension, layer_id) = params;
 
-	if (dimension != 2 || layer_id >= _nz)
+	if (dimension != 2u || layer_id >= _nz)
 	{
 		throw SSV_ERROR_INVALID_VALUE;
 	}
@@ -169,16 +141,16 @@ cudaTextureObject_t BlobBase::_CreateTexture2d(
 
 cudaTextureObject_t BlobBase::_CreateTexture3d(
 	const texture_param_t &params
-)
+) const
 {
 	unsigned char dimension;
 	struct cudaTextureDesc sTexDesc;
 	cudaChannelFormatDesc sChannelDesc;
 	size_t layer_id;
 
-	std::tie(dimension, sTexDesc, sChannelDesc, layer_id) = params;
+	std::tie(sTexDesc, sChannelDesc, dimension, layer_id) = params;
 
-	if (dimension != 3 || layer_id != 0)
+	if (dimension != 3u || layer_id != 0)
 	{
 		throw SSV_ERROR_INVALID_VALUE;
 	}
@@ -210,7 +182,7 @@ cudaTextureObject_t BlobBase::_CreateTexture3d(
 	return texture_object;
 }
 
-void BlobBase::_CopyToCudaArray()
+void BlobBase::_CopyToCudaArray() const
 {
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
@@ -264,4 +236,32 @@ void BlobBase::_DestroyCuda()
 	_data_texture_default_3d = 0;
 	_data_textures.clear();
 	_data_cuda_array = nullptr;
+}
+
+BlobBase::texture_param_t BlobBase::_MakeTextureParam(
+	const cudaTextureDesc * texDesc, const cudaChannelFormatDesc * channelDesc, 
+	unsigned char dimension, uint layer_id
+)
+{
+	struct cudaTextureDesc sTexDesc;
+	if (texDesc == nullptr)
+	{
+		memset(&sTexDesc, 0, sizeof(sTexDesc));
+		sTexDesc.addressMode[0] = cudaAddressModeClamp;
+		sTexDesc.addressMode[1] = cudaAddressModeClamp;
+		sTexDesc.addressMode[2] = cudaAddressModeClamp;
+		sTexDesc.filterMode = cudaFilterModeLinear;
+		sTexDesc.readMode = cudaReadModeElementType;
+		sTexDesc.normalizedCoords = 0;
+		texDesc = &sTexDesc;
+	}
+
+	cudaChannelFormatDesc sChannelDesc;
+	if (channelDesc == nullptr)
+	{
+		sChannelDesc = cudaCreateChannelDesc<byte>();
+		channelDesc = &sChannelDesc;
+	}
+
+	return std::make_tuple(*texDesc, *channelDesc, dimension, layer_id);
 }
