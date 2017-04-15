@@ -14,7 +14,7 @@ void BlobBase::copyToCpu(cudaPitchedPtr *from_gpu_data)
 		from_gpu_data = &_data_gpu;
 	}
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(_data_cpu, _nx, _nx, _ny);
+		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
 	cudaMemcpy3DParms params = { 0 };
 	params.srcPtr = *from_gpu_data;
 	params.dstPtr = data_cpu_pitched_ptr;
@@ -34,7 +34,7 @@ void BlobBase::copyToGpu(void *from_cpu_data)
 		from_cpu_data = _data_cpu;
 	}
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(from_cpu_data, _nx, _nx, _ny);
+		make_cudaPitchedPtr(from_cpu_data, _nx_in_bytes, _nx_in_bytes, _ny);
 	cudaMemcpy3DParms params = { 0 };
 	params.srcPtr = data_cpu_pitched_ptr;
 	params.dstPtr = _data_gpu;
@@ -44,12 +44,104 @@ void BlobBase::copyToGpu(void *from_cpu_data)
 		SSV_ERROR_INVALID_VALUE);
 }
 
-cudaTextureObject_t BlobBase::createTexture2d(
-	const cudaTextureDesc *texDesc,
-	const cudaChannelFormatDesc *channelDesc,
-	size_t layer_id)
+void BlobBase::destroyTexture(cudaTextureObject_t texture_object)
 {
-	if (layer_id >= _nz)
+	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+		SSV_ERROR_DEVICE_NOT_READY);
+
+	if (!texture_object)
+	{
+		if (_data_texture_default_2d)
+		{
+			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_2d),
+				SSV_ERROR_UNKNOWN);
+			return;
+		}
+		if (_data_texture_default_3d)
+		{
+			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_3d),
+				SSV_ERROR_UNKNOWN);
+			return;
+		}
+		for (auto kv : _data_textures)
+		{
+			checkCudaErrorAndThrow(cudaDestroyTextureObject(kv.second),
+				SSV_ERROR_UNKNOWN);
+		}
+		if (_data_cuda_array)
+		{
+			checkCudaErrorAndThrow(cudaFreeArray(_data_cuda_array),
+				SSV_ERROR_UNKNOWN);
+		}
+	}
+	else
+	{
+		if (_data_texture_default_2d == texture_object)
+		{
+			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_2d),
+				SSV_ERROR_UNKNOWN);
+			return;
+		}
+		if (_data_texture_default_3d == texture_object)
+		{
+			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_3d),
+				SSV_ERROR_UNKNOWN);
+			return;
+		}
+		for (auto kv : _data_textures)
+		{
+			if (kv.second == texture_object)
+			{
+				_data_textures.erase(kv.first);
+				checkCudaErrorAndThrow(cudaDestroyTextureObject(kv.second),
+					SSV_ERROR_UNKNOWN);
+				return;
+			}
+		}
+		throw SSV_ERROR_INVALID_VALUE;
+	}
+}
+
+BlobBase::texture_param_t BlobBase::_MakeTextureParam(
+	unsigned char dimension, const cudaTextureDesc * texDesc,
+	const cudaChannelFormatDesc * channelDesc, size_t layer_id
+)
+{
+	struct cudaTextureDesc sTexDesc;
+	if (texDesc == nullptr)
+	{
+		memset(&sTexDesc, 0, sizeof(sTexDesc));
+		sTexDesc.addressMode[0] = cudaAddressModeClamp;
+		sTexDesc.addressMode[1] = cudaAddressModeClamp;
+		sTexDesc.addressMode[2] = cudaAddressModeClamp;
+		sTexDesc.filterMode = cudaFilterModeLinear;
+		sTexDesc.readMode = cudaReadModeElementType;
+		sTexDesc.normalizedCoords = 0;
+		texDesc = &sTexDesc;
+	}
+
+	cudaChannelFormatDesc sChannelDesc;
+	if (channelDesc == nullptr)
+	{
+		sChannelDesc = cudaCreateChannelDesc<byte>();
+		channelDesc = &sChannelDesc;
+	}
+
+	return std::make_tuple(dimension, *texDesc, *channelDesc, layer_id);
+}
+
+cudaTextureObject_t BlobBase::_CreateTexture2d(
+	const texture_param_t &params
+)
+{
+	unsigned char dimension;
+	struct cudaTextureDesc sTexDesc;
+	cudaChannelFormatDesc sChannelDesc; 
+	size_t layer_id;
+
+	std::tie(dimension, sTexDesc, sChannelDesc, layer_id) = params;
+
+	if (dimension != 2 || layer_id >= _nz)
 	{
 		throw SSV_ERROR_INVALID_VALUE;
 	}
@@ -57,37 +149,10 @@ cudaTextureObject_t BlobBase::createTexture2d(
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
-	if (_data_texture_2d)
-	{
-		checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_2d),
-			SSV_ERROR_UNKNOWN);
-		_data_texture_2d = 0;
-	}
-
-	struct cudaTextureDesc sTexDesc;
-	if (texDesc == nullptr)
-	{
-		memset(&sTexDesc, 0, sizeof(sTexDesc));
-		sTexDesc.addressMode[0] = cudaAddressModeClamp;
-		sTexDesc.addressMode[1] = cudaAddressModeClamp;
-		sTexDesc.addressMode[2] = cudaAddressModeClamp;
-		sTexDesc.filterMode = cudaFilterModeLinear;
-		sTexDesc.readMode = cudaReadModeElementType;
-		sTexDesc.normalizedCoords = 0;
-		texDesc = &sTexDesc;
-	}
-
-	cudaChannelFormatDesc sChannelDesc;
-	if (channelDesc == nullptr)
-	{
-		sChannelDesc = cudaCreateChannelDesc<byte>();
-		channelDesc = &sChannelDesc;
-	}
-
 	cudaResourceDesc sResDesc;
 	memset(&sResDesc, 0, sizeof(sResDesc));
 	sResDesc.resType = cudaResourceTypePitch2D;
-	sResDesc.res.pitch2D.desc = *channelDesc;
+	sResDesc.res.pitch2D.desc = sChannelDesc;
 	sResDesc.res.pitch2D.devPtr = 
 		static_cast<byte *>(_data_gpu.ptr)
 		+ layer_id * _data_gpu.pitch * _data_gpu.ysize;
@@ -95,68 +160,57 @@ cudaTextureObject_t BlobBase::createTexture2d(
 	sResDesc.res.pitch2D.height = _data_gpu.ysize;
 	sResDesc.res.pitch2D.pitchInBytes = _data_gpu.pitch;
 
-	checkCudaErrorAndThrow(cudaCreateTextureObject(&_data_texture_2d, &sResDesc, texDesc, NULL),
+	cudaTextureObject_t texture_object = 0;
+	checkCudaErrorAndThrow(cudaCreateTextureObject(&texture_object, &sResDesc, &sTexDesc, NULL),
 		SSV_ERROR_INVALID_VALUE);
 
-	return _data_texture_2d;
+	return texture_object;
 }
 
-cudaTextureObject_t BlobBase::createTexture3d(
-	const cudaTextureDesc *texDesc,
-	const cudaChannelFormatDesc *channelDesc
+cudaTextureObject_t BlobBase::_CreateTexture3d(
+	const texture_param_t &params
 )
 {
+	unsigned char dimension;
+	struct cudaTextureDesc sTexDesc;
+	cudaChannelFormatDesc sChannelDesc;
+	size_t layer_id;
+
+	std::tie(dimension, sTexDesc, sChannelDesc, layer_id) = params;
+
+	if (dimension != 3 || layer_id != 0)
+	{
+		throw SSV_ERROR_INVALID_VALUE;
+	}
+
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
-	if (_data_texture_3d)
+	if (!_data_cuda_array)
 	{
-		checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_3d),
-			SSV_ERROR_UNKNOWN);
-		_data_texture_3d = 0;
+		size_t element_size_in_bytes =
+			(sChannelDesc.x + sChannelDesc.y + sChannelDesc.z + sChannelDesc.w) / 8u;
+		cudaExtent extent_in_elements = make_cudaExtent(
+			_nx_in_bytes / element_size_in_bytes, _ny, _nz
+		);
+
+		checkCudaErrorAndThrow(cudaMalloc3DArray(&_data_cuda_array, &sChannelDesc, extent_in_elements),
+			SSV_ERROR_OUT_OF_MEMORY_GPU);
 	}
-
-	struct cudaTextureDesc sTexDesc;
-	if (texDesc == nullptr)
-	{
-		memset(&sTexDesc, 0, sizeof(sTexDesc));
-		sTexDesc.addressMode[0] = cudaAddressModeClamp;
-		sTexDesc.addressMode[1] = cudaAddressModeClamp;
-		sTexDesc.addressMode[2] = cudaAddressModeClamp;
-		sTexDesc.filterMode = cudaFilterModeLinear;
-		sTexDesc.readMode = cudaReadModeElementType;
-		sTexDesc.normalizedCoords = 0;
-		texDesc = &sTexDesc;
-	}
-
-	cudaChannelFormatDesc sChannelDesc;
-	if (channelDesc == nullptr)
-	{
-		sChannelDesc = cudaCreateChannelDesc<byte>();
-		channelDesc = &sChannelDesc;
-	}
-
-	size_t element_size_in_bytes = 
-		(channelDesc->x + channelDesc->y + channelDesc->z + channelDesc->w) / 8u;
-	cudaExtent extent_in_elements = make_cudaExtent(
-		_nx / element_size_in_bytes, _ny, _nz
-	);
-
-	checkCudaErrorAndThrow(cudaMalloc3DArray(&_data_cuda_array, channelDesc, extent_in_elements),
-		SSV_ERROR_OUT_OF_MEMORY_GPU);
 
 	cudaResourceDesc sResDesc;
 	memset(&sResDesc, 0, sizeof(sResDesc));
 	sResDesc.resType = cudaResourceTypeArray;
 	sResDesc.res.array.array = _data_cuda_array;
 
-	checkCudaErrorAndThrow(cudaCreateTextureObject(&_data_texture_3d, &sResDesc, &sTexDesc, NULL),
+	cudaTextureObject_t texture_object = 0;
+	checkCudaErrorAndThrow(cudaCreateTextureObject(&texture_object, &sResDesc, &sTexDesc, NULL),
 		SSV_ERROR_INVALID_VALUE);
 
-	return data_texture_3d();
+	return texture_object;
 }
 
-cudaTextureObject_t BlobBase::data_texture_3d() const
+void BlobBase::_CopyToCudaArray()
 {
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
@@ -171,14 +225,12 @@ cudaTextureObject_t BlobBase::data_texture_3d() const
 	params.extent = extent_in_elements;
 	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
 		SSV_ERROR_INVALID_VALUE);
-
-	return _data_texture_3d;
 }
 
 void BlobBase::_InitCuda(int gpu_device)
 {
 	_storage_gpu_device = gpu_device;
-	_data_gpu_extent.width = _nx;
+	_data_gpu_extent.width = _nx_in_bytes;
 	_data_gpu_extent.height = _ny;
 	_data_gpu_extent.depth = _nz;
 
@@ -202,22 +254,14 @@ void BlobBase::_DestroyCuda()
 			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
 				SSV_ERROR_INVALID_VALUE);
 		}
-		if (_data_texture_2d)
-		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_2d),
-				SSV_ERROR_UNKNOWN);
-		}
-		if (_data_texture_3d)
-		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_3d),
-				SSV_ERROR_UNKNOWN);
-		}
+		destroyTexture();
 	}
 
 	memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
 	memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
 	_storage_gpu_device = -1;
-	_data_texture_2d = 0;
-	_data_texture_3d = 0;
+	_data_texture_default_2d = 0;
+	_data_texture_default_3d = 0;
+	_data_textures.clear();
 	_data_cuda_array = nullptr;
 }

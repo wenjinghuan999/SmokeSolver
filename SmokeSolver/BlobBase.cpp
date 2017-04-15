@@ -3,14 +3,14 @@
 using namespace ssv;
 
 BlobBase::BlobBase()
-	: _nx(0), _ny(0), _nz(0), _numel(0), _data_cpu(nullptr)
+	: _nx_in_bytes(0), _ny(0), _nz(0), _size_in_bytes(0), _data_cpu(nullptr)
 {
 	memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
 	memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
 	
 	_storage_gpu_device = -1;
-	_data_texture_2d = 0;
-	_data_texture_3d = 0;
+	_data_texture_default_2d = 0;
+	_data_texture_default_3d = 0;
 	_data_cuda_array = nullptr;
 }
 
@@ -29,13 +29,13 @@ void BlobBase::setSize(size_t nx, size_t ny, size_t nz,
 	
 	reset();
 
-	_nx = nx; _ny = ny; _nz = nz;
+	_nx_in_bytes = nx; _ny = ny; _nz = nz;
 	_storage_gpu_device = gpu_device;
-	_numel = _nx * _ny * _nz;
+	_size_in_bytes = _nx_in_bytes * _ny * _nz;
 
 	if (cpu_copy)
 	{
-		_data_cpu = new byte[_numel];
+		_data_cpu = new byte[_size_in_bytes];
 		if (!_data_cpu)
 		{
 			throw SSV_ERROR_OUT_OF_MEMORY_CPU;
@@ -54,8 +54,8 @@ void BlobBase::reset()
 		delete[] _data_cpu;
 		_data_cpu = nullptr;
 	}
-	_nx = 0;
+	_nx_in_bytes = 0;
 	_ny = 0;
 	_nz = 0;
-	_numel = 0;
+	_size_in_bytes = 0;
 }

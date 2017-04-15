@@ -77,7 +77,7 @@ void Smoke2dSolver::_StepCuda()
 	another.setSize(5, 2, 3);
 	cudaPitchedPtr *ppap = another.data_gpu_cuda_pitched_ptr();
 
-	cudaTextureObject_t texObj = _data.createTexture3d();
+	cudaTextureObject_t texObj = _data.data_texture_3d();
 	
 	kernelWWW<<<2, 5>>>(texObj, *ppap);
 
@@ -131,7 +131,19 @@ void Smoke2dSolver::_StepCuda()
 	}
 	std::cout << std::endl;
 
-	//texObj = _data.data_texture_3d();
+	texObj = _data.data_texture_2d();
+	std::cout << "TEX: " << texObj << std::endl;
+	texObj = _data.data_texture_2d();
+	std::cout << "TEX: " << texObj << std::endl;
+	texObj = _data.data_texture_2d();
+	std::cout << "TEX: " << texObj << std::endl;
+	texObj = _data.data_texture_3d();
+	std::cout << "TEX: " << texObj << std::endl;
+	texObj = _data.data_texture_3d();
+	std::cout << "TEX: " << texObj << std::endl;
+	texObj = _data.data_texture_3d();
+	std::cout << "TEX: " << texObj << std::endl;
+
 	kernelWWW<<<2, 5>>>(texObj, *ppap);
 
 	cudaDeviceSynchronize();
@@ -153,9 +165,6 @@ void Smoke2dSolver::_StepCuda()
 		}
 		std::cout << std::endl;
 	}
-
-	another.reset();
-	another.setSize(5, 2, 3);
 
 	texObj = _data.data_texture_3d();
 	kernelWWW << <2, 5 >> >(texObj, *ppap);
@@ -179,5 +188,10 @@ void Smoke2dSolver::_StepCuda()
 		}
 		std::cout << std::endl;
 	}
+
+}
+
+void Smoke2dSolver::_DestroyCuda()
+{
 
 }

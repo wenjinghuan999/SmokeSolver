@@ -25,6 +25,12 @@
     <Filter Include="Blob">
       <UniqueIdentifier>{691dafc9-d8df-4382-9d0e-a615ab56b2bd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SmokeSolver">
+      <UniqueIdentifier>{9374aa2c-ad17-4b52-9173-c969aa2e0943}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AdvectionMethod">
+      <UniqueIdentifier>{f95ac5e4-9c3e-4822-8bf5-a44e6cd4e111}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -73,6 +79,12 @@
     </ClInclude>
     <ClInclude Include="Smoke2dSolver.h">
       <Filter>Smoke2dSolver</Filter>
+    </ClInclude>
+    <ClInclude Include="SmokeSolver.h">
+      <Filter>SmokeSolver</Filter>
+    </ClInclude>
+    <ClInclude Include="AdvectionMethod.h">
+      <Filter>AdvectionMethod</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

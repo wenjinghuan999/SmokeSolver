@@ -12,7 +12,7 @@ Smoke2dSolver::~Smoke2dSolver()
 
 }
 
-void ssv::Smoke2dSolver::Init(size_t nx, size_t ny)
+void Smoke2dSolver::setSize(size_t nx, size_t ny)
 {
 	if (nx == 0 || ny == 0)
 	{
@@ -21,16 +21,23 @@ void ssv::Smoke2dSolver::Init(size_t nx, size_t ny)
 
 	_nx = nx;
 	_ny = ny;
+}
 
+void Smoke2dSolver::init()
+{
+	if (_nx == 0 || _ny == 0)
+	{
+		throw SSV_ERROR_NOT_INITIALIZED;
+	}
 	_InitCuda();
 }
 
-void ssv::Smoke2dSolver::Step()
+void Smoke2dSolver::step()
 {
 	_StepCuda();
 }
 
-void ssv::Smoke2dSolver::Destory()
+void Smoke2dSolver::destory()
 {
-
+	_DestroyCuda();
 }

@@ -94,8 +94,9 @@ int main()
 	//ts.join();
 
 	Smoke2dSolver solver;
-	solver.Init(5, 2);
-	solver.Step();
+	solver.setSize(5, 2);
+	solver.init();
+	solver.step();
 
 
 	return 0;

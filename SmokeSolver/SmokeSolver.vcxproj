@@ -98,6 +98,7 @@
     <None Include="Smoke2d.proto" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdvectionMethod.h" />
     <ClInclude Include="Blob.h" />
     <ClInclude Include="BlobBase.h" />
     <ClInclude Include="pitched_ptr.h" />
@@ -106,6 +107,7 @@
     <ClInclude Include="Smoke2d.grpc.pb.h" />
     <ClInclude Include="Smoke2d.pb.h" />
     <ClInclude Include="Smoke2dSolver.h" />
+    <ClInclude Include="SmokeSolver.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="BlobBase.cu">
