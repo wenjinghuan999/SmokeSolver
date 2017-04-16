@@ -25,7 +25,7 @@ void check(T result, char const *const func, const char *const file, int const l
 	}
 }
 
-#define checkCudaErrorAndThrow(val, throwing_error)           check ((val), #val, __FILE__, __LINE__, throwing_error)
+#define checkCudaErrorAndThrow(val, throwing_error) check ((val), #val, __FILE__, __LINE__, throwing_error)
 
 template <class T>
 void Print(T *a_dev, size_t length = 1u, std::string tag = "")

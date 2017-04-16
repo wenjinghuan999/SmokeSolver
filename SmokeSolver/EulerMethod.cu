@@ -21,7 +21,7 @@ void EulerMethodForward<QType>::EulerCuda(
 ) const
 {
 	kernelEulerMethodForward <<<q.ny(), q.nx()>>>(
-		q.helper(), d.helper_const()
+		q.wrapper(), d.wrapper_const()
 		);
 }
 

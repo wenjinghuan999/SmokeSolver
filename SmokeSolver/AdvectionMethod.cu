@@ -24,7 +24,7 @@ void AdvectionMethod2dSemiLagrangian<QType>::operator () (
 	) const
 {
 	kernelAdvectionMethod2dSemiLagrangian<<<q.ny(), q.nx()>>>(
-		qout.helper(), q.data_texture_2d(), u.helper_const()
+		qout.wrapper(), q.data_texture_2d(), u.wrapper_const()
 	);
 }
 

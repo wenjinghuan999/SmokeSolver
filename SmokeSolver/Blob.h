@@ -161,7 +161,7 @@ namespace ssv
 		}
 
 		// Return BlobWrapper of this Blob
-		BlobWrapper<_T> helper() 
+		BlobWrapper<_T> wrapper() 
 		{
 			return BlobWrapper<_T> {
 				static_cast<_T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
@@ -169,7 +169,7 @@ namespace ssv
 		}
 
 		// Return BlobWrapperConst of this Blob
-		BlobWrapperConst<_T> helper_const() const
+		BlobWrapperConst<_T> wrapper_const() const
 		{
 			return BlobWrapperConst<_T> {
 				static_cast<const _T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
