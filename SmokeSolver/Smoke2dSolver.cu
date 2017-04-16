@@ -113,8 +113,8 @@ void Smoke2dSolver::_StepCuda()
 	Blob<T2> u;
 	u.setSize(5, 2, 3);
 
-	AdvectionMethod2dSemiLagrangian<T> adv_lag;
-	AdvectionMethod2d<T> &adv = adv_lag;
+	AdvectionMethodSemiLagrangian<T> adv_lag;
+	AdvectionMethod<T> &adv = adv_lag;
 	adv(another, _data, u);
 
 	EulerMethodForward<T> euler_forward;

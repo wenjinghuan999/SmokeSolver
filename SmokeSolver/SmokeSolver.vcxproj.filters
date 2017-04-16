@@ -28,10 +28,13 @@
     <Filter Include="SmokeSolver">
       <UniqueIdentifier>{9374aa2c-ad17-4b52-9173-c969aa2e0943}</UniqueIdentifier>
     </Filter>
-    <Filter Include="AdvectionMethod">
+    <Filter Include="Methods">
+      <UniqueIdentifier>{6c3f6b1d-e351-4633-a2b4-74a00ff15312}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Methods\AdvectionMethod">
       <UniqueIdentifier>{f95ac5e4-9c3e-4822-8bf5-a44e6cd4e111}</UniqueIdentifier>
     </Filter>
-    <Filter Include="EulerMethod">
+    <Filter Include="Methods\EulerMethod">
       <UniqueIdentifier>{4cbde66d-35b0-4c5f-af33-cef779050d3e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -87,10 +90,10 @@
       <Filter>SmokeSolver</Filter>
     </ClInclude>
     <ClInclude Include="AdvectionMethod.h">
-      <Filter>AdvectionMethod</Filter>
+      <Filter>Methods\AdvectionMethod</Filter>
     </ClInclude>
     <ClInclude Include="EulerMethod.h">
-      <Filter>EulerMethod</Filter>
+      <Filter>Methods\EulerMethod</Filter>
     </ClInclude>
     <ClInclude Include="hash_tuple.h">
       <Filter>Common</Filter>
@@ -104,10 +107,10 @@
       <Filter>Blob</Filter>
     </CudaCompile>
     <CudaCompile Include="AdvectionMethod.cu">
-      <Filter>AdvectionMethod</Filter>
+      <Filter>Methods\AdvectionMethod</Filter>
     </CudaCompile>
     <CudaCompile Include="EulerMethod.cu">
-      <Filter>EulerMethod</Filter>
+      <Filter>Methods\EulerMethod</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

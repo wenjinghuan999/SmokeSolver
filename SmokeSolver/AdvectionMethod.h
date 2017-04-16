@@ -8,25 +8,33 @@
 
 namespace ssv
 {
-	// Solve 2D advection problem
+	// Solve advection problem
 	//  dq          __
 	// ---- = -(u . \/) q
 	//  dt
 	template <typename QType>
-	class AdvectionMethod2d
+	class AdvectionMethod
 	{
 	public:
+		// 2D
 		virtual void operator () (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
+			) const = 0;
+		// 3D
+		virtual void operator () (
+			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 			) const = 0;
 	};
 
 	template <typename QType>
-	class AdvectionMethod2dSemiLagrangian : public AdvectionMethod2d<QType>
+	class AdvectionMethodSemiLagrangian : public AdvectionMethod<QType>
 	{
 	public:
 		virtual void operator () (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
+			) const override;
+		virtual void operator () (
+			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 			) const override;
 	};
 }
