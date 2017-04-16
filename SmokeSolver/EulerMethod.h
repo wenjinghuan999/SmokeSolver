@@ -6,6 +6,7 @@
 #include "common.h"
 #include "Blob.h"
 
+
 namespace ssv
 {
 	// Solve euler problem
@@ -16,7 +17,7 @@ namespace ssv
 	class EulerMethod
 	{
 	public:
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &q, const Blob<QType> &d
 			) const = 0;
 	};
@@ -25,17 +26,9 @@ namespace ssv
 	class EulerMethodForward : public EulerMethod<QType>
 	{
 	public:
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &q, const Blob<QType> &d
-			) const override
-		{
-			EulerCuda(q, d);
-		}
-
-	private:
-		void EulerCuda(
-			Blob<QType> &q, const Blob<QType> &d
-		) const;
+			) const override;
 	};
 }
 

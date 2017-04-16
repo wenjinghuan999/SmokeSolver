@@ -16,9 +16,9 @@ static __global__ void kernelEulerMethodForward(
 }
 
 template <typename QType>
-void EulerMethodForward<QType>::EulerCuda(
-	Blob<QType>& q, const Blob<QType>& d
-) const
+void EulerMethodForward<QType>::operator() (
+	Blob<QType> &q, const Blob<QType> &d
+	) const
 {
 	kernelEulerMethodForward <<<q.ny(), q.nx()>>>(
 		q.wrapper(), d.wrapper_const()

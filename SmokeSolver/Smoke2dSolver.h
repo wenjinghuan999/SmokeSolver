@@ -3,6 +3,7 @@
 #ifndef __SMOKE2D_SOLVER_H__
 #define __SMOKE2D_SOLVER_H__
 
+
 #include "common.h"
 #include "SmokeSolver.h"
 #include "Blob.h"

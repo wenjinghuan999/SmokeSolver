@@ -73,13 +73,25 @@ namespace ssv
 		virtual uint pitch_in_elements() const = 0;
 
 		// Return raw pointer of CPU data
-		void *data_cpu() const
+		const void *data_cpu() const
+		{
+			return _data_cpu;
+		}
+
+		// Return raw pointer of CPU data
+		void *data_cpu()
 		{
 			return _data_cpu;
 		}
 
 		// Return cudaPitchedPtr of GPU data
 		const cudaPitchedPtr *data_gpu_cuda_pitched_ptr() const
+		{
+			return &_data_gpu;
+		}
+
+		// Return cudaPitchedPtr of GPU data
+		const cudaPitchedPtr *data_gpu_cuda_pitched_ptr()
 		{
 			return &_data_gpu;
 		}
@@ -135,7 +147,7 @@ namespace ssv
 		cudaExtent _data_gpu_extent;
 		cudaPitchedPtr _data_gpu;
 		mutable cudaTextureObject_t _data_texture_default_2d, _data_texture_default_3d;
-		mutable std::unordered_map<texture_param_t, cudaTextureObject_t, hash_tuple::hash<texture_param_t> > _data_textures;
+		mutable std::unordered_map<texture_param_t, cudaTextureObject_t, ssv::hash_tuple::hash<texture_param_t> > _data_textures;
 		mutable cudaArray_t _data_cuda_array;
 	};
 }

@@ -143,19 +143,93 @@ namespace ssv
 		}
 
 		// Raw pointer of CPU data
-		_T *data_cpu() const
+		const _T *data_cpu() const
+		{
+			return static_cast<const _T *>(_data_cpu);
+		}
+
+		// Raw pointer of CPU data
+		_T *data_cpu()
 		{
 			return static_cast<_T *>(_data_cpu);
 		}
 
+		// Begining pointer of CPU data
+		// = data_cpu()
+		const _T *data_cpu_begin() const
+		{
+			return static_cast<const _T *>(_data_cpu);
+		}
+
+		// Begining pointer of CPU data
+		// = data_cpu()
+		_T *data_cpu_begin()
+		{
+			return static_cast<_T *>(_data_cpu);
+		}
+
+		// Ending pointer of CPU data
+		// = data_cpu() + numel()
+		const _T *data_cpu_end() const
+		{
+			return static_cast<const _T *>(_data_cpu) + numel();
+		}
+
+		// Ending pointer of CPU data
+		// = data_cpu() + numel()
+		_T *data_cpu_end()
+		{
+			return static_cast<_T *>(_data_cpu) + numel();
+		}
+
 		// pitched_ptr of GPU data
-		pitched_ptr<_T> data_gpu() const
+		pitched_ptr<const _T> data_gpu() const
+		{
+			return pitched_ptr<const _T>(&_data_gpu);
+		}
+
+		// pitched_ptr of GPU data
+		pitched_ptr<_T> data_gpu()
 		{
 			return pitched_ptr<_T>(&_data_gpu);
 		}
 
+		// Begining pitched_ptr of GPU data
+		// = data_gpu()
+		pitched_ptr<const _T> data_gpu_begin() const
+		{
+			return pitched_ptr<const _T>(&_data_gpu);
+		}
+
+		// Begining pitched_ptr of GPU data
+		// = data_gpu()
+		pitched_ptr<_T> data_gpu_begin()
+		{
+			return pitched_ptr<_T>(&_data_gpu);
+		}
+
+		// Ending pitched_ptr of GPU data
+		// = data_gpu() + numel()
+		pitched_ptr<const _T> data_gpu_end() const
+		{
+			return pitched_ptr<const _T>(&_data_gpu) + numel();
+		}
+
+		// Ending pitched_ptr of GPU data
+		// = data_gpu() + numel()
+		pitched_ptr<_T> data_gpu_end()
+		{
+			return pitched_ptr<_T>(&_data_gpu) + numel();
+		}
+
 		// Raw pointer of GPU data
-		_T *data_gpu_raw() const
+		const _T *data_gpu_raw() const
+		{
+			return static_cast<const _T *>(_data_gpu.ptr);
+		}
+
+		// Raw pointer of GPU data
+		_T *data_gpu_raw()
 		{
 			return static_cast<_T *>(_data_gpu.ptr);
 		}

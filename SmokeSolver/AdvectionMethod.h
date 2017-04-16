@@ -6,6 +6,7 @@
 #include "common.h"
 #include "Blob.h"
 
+
 namespace ssv
 {
 	// Solve advection problem
@@ -17,11 +18,11 @@ namespace ssv
 	{
 	public:
 		// 2D
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 			) const = 0;
 		// 3D
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 			) const = 0;
 	};
@@ -30,10 +31,10 @@ namespace ssv
 	class AdvectionMethodSemiLagrangian : public AdvectionMethod<QType>
 	{
 	public:
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 			) const override;
-		virtual void operator () (
+		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 			) const override;
 	};
