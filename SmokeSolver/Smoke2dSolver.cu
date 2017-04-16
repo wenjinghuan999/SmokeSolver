@@ -7,6 +7,7 @@ using namespace ssv;
 
 #include "AdvectionMethod.h"
 #include "EulerMethod.h"
+#include "BoundaryMethod.h"
 
 #include <iostream>
 #include <thrust/device_vector.h>
@@ -74,7 +75,7 @@ void Smoke2dSolver::_StepCuda()
 
 	const cudaPitchedPtr *ppp = _data.data_gpu_cuda_pitched_ptr();
 	T *pd = _data.data_gpu_raw();
-	Print(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
+	PrintRaw(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 
 	Blob<T> another;
 	another.setSize(5, 2, 3);
@@ -86,7 +87,7 @@ void Smoke2dSolver::_StepCuda()
 
 	cudaDeviceSynchronize();
 
-	Print(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
+	PrintRaw(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
 	another.copyToCpu();
 	p = another.data_cpu();
 
@@ -104,14 +105,20 @@ void Smoke2dSolver::_StepCuda()
 		std::cout << std::endl;
 	}
 
+	Blob<T2> u;
+	u.setSize(5, 2, 3);
+
+	Blob<byte> tp;
+	tp.setSize(5, 2, 3);
+
+	BoundaryMethodClamp<T2, byte> bnd;
+	bnd(u, tp, 0, make_float2(1.f, 0.5));
 
 	thrust::transform(_data.data_gpu(), _data.data_gpu() + _nx*_ny*3, _data.data_gpu(), 1.f + _1 * _1);
-	Print(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
+	PrintRaw(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 	_data.copyToCpu();
 	p = _data.data_cpu();
 
-	Blob<T2> u;
-	u.setSize(5, 2, 3);
 
 	AdvectionMethodSemiLagrangian<T> adv_lag;
 	AdvectionMethod<T> &adv = adv_lag;
@@ -156,7 +163,7 @@ void Smoke2dSolver::_StepCuda()
 	std::cout << "TEX: " << texObj << std::endl;
 
 
-	Print(another.data_gpu_raw(), another.pitch_in_elements() * another.ny() * another.nz(), "data:\n");
+	PrintRaw(another.data_gpu_raw(), another.pitch_in_elements() * another.ny() * another.nz(), "data:\n");
 	another.copyToCpu();
 	p = another.data_cpu();
 
@@ -179,7 +186,7 @@ void Smoke2dSolver::_StepCuda()
 
 	cudaDeviceSynchronize();
 
-	Print(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
+	PrintRaw(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
 	another.copyToCpu();
 	p = another.data_cpu();
 
@@ -197,6 +204,8 @@ void Smoke2dSolver::_StepCuda()
 		std::cout << std::endl;
 	}
 
+	std::cout << "u" << std::endl;
+	PrintBlobGPU(another);
 }
 
 void Smoke2dSolver::_DestroyCuda()

@@ -37,6 +37,9 @@
     <Filter Include="Methods\EulerMethod">
       <UniqueIdentifier>{4cbde66d-35b0-4c5f-af33-cef779050d3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Methods\BoundaryMethod">
+      <UniqueIdentifier>{4fb4c381-c3e6-4a6d-ad30-83676e85b911}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -98,6 +101,12 @@
     <ClInclude Include="hash_tuple.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="BoundaryMethod.h">
+      <Filter>Methods\BoundaryMethod</Filter>
+    </ClInclude>
+    <ClInclude Include="unary_ops.cuh">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Smoke2dSolver.cu">
@@ -111,6 +120,9 @@
     </CudaCompile>
     <CudaCompile Include="EulerMethod.cu">
       <Filter>Methods\EulerMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="BoundaryMethod.cu">
+      <Filter>Methods\BoundaryMethod</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
