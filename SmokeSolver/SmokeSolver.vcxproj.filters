@@ -107,6 +107,12 @@
     <ClInclude Include="unary_ops.cuh">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="debug_output.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="debug_output.cuh">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Smoke2dSolver.cu">

@@ -4,6 +4,7 @@
 #define __HASH_TUPLE_H__
 
 #include "common.h"
+#include <tuple>
 
 namespace ssv
 {

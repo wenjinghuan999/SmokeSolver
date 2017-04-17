@@ -4,6 +4,9 @@
 using namespace ssv;
 
 #include "pitched_ptr.h"
+#include "debug_output.h"
+#include "debug_output.cuh"
+using namespace ssv::output;
 
 #include <iostream>
 #include <thrust/device_vector.h>

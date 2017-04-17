@@ -102,6 +102,8 @@
     <ClInclude Include="Blob.h" />
     <ClInclude Include="BlobBase.h" />
     <ClInclude Include="BoundaryMethod.h" />
+    <ClInclude Include="debug_output.cuh" />
+    <ClInclude Include="debug_output.h" />
     <ClInclude Include="EulerMethod.h" />
     <ClInclude Include="hash_tuple.h" />
     <ClInclude Include="pitched_ptr.h" />

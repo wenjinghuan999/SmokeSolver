@@ -6,7 +6,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <google/protobuf/stubs/common.h>
-#include <tuple>
 
 
 namespace ssv
@@ -29,7 +28,6 @@ namespace ssv
 		SSV_ERROR_DEVICE_NOT_READY = 7006,
 		SSV_ERROR_UNKNOWN = 7999
 	} error_t;
-
 }
 
 #endif // !__COMMON_H__
