@@ -5,10 +5,6 @@ using namespace ssv;
 
 #include "pitched_ptr.h"
 
-#include "AdvectionMethod.h"
-#include "EulerMethod.h"
-#include "BoundaryMethod.h"
-
 #include <iostream>
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>
@@ -18,8 +14,9 @@ void ssv::Smoke2dSolver::_InitCuda()
 {
 	cudaSetDevice(0);
 
-	_data.setSize(_nx, _ny);
-	_data.setSize(5, 2, 3);
+	_data = Blob<T>(_nx, _ny);
+	Blob<T> a(5, 2, 3);
+	_data = a;
 }
 
 
@@ -77,8 +74,7 @@ void Smoke2dSolver::_StepCuda()
 	T *pd = _data.data_gpu_raw();
 	PrintRaw(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 
-	Blob<T> another;
-	another.setSize(5, 2, 3);
+	Blob<T> another = Blob<T>(5, 2, 3);
 	const cudaPitchedPtr *ppap = another.data_gpu_cuda_pitched_ptr();
 
 	cudaTextureObject_t texObj = _data.data_texture_3d();
@@ -105,11 +101,9 @@ void Smoke2dSolver::_StepCuda()
 		std::cout << std::endl;
 	}
 
-	Blob<T2> u;
-	u.setSize(5, 2, 3);
+	Blob<T2> u = Blob<T2>(5, 2, 3);
 
-	Blob<byte> tp;
-	tp.setSize(5, 2, 3);
+	Blob<byte> tp(5, 2, 3);
 
 	BoundaryMethodClamp<T2, byte> bnd;
 	bnd(u, tp, 0, make_float2(1.f, 0.5));
@@ -190,6 +184,8 @@ void Smoke2dSolver::_StepCuda()
 	another.copyToCpu();
 	p = another.data_cpu();
 
+	another = _data;
+
 	std::cout << "another" << std::endl;
 	for (size_t k = 0; k < 3; k++)
 	{
@@ -203,6 +199,8 @@ void Smoke2dSolver::_StepCuda()
 		}
 		std::cout << std::endl;
 	}
+
+	another = Blob<T>(5,4,3);
 
 	std::cout << "u" << std::endl;
 	PrintBlobGPU(another);

@@ -199,45 +199,6 @@ void BlobBase::_CopyToCudaArray() const
 		SSV_ERROR_INVALID_VALUE);
 }
 
-void BlobBase::_InitCuda(int gpu_device)
-{
-	_storage_gpu_device = gpu_device;
-	_data_gpu_extent.width = _nx_in_bytes;
-	_data_gpu_extent.height = _ny;
-	_data_gpu_extent.depth = _nz;
-
-	if (gpu_device >= 0)
-	{
-		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-			SSV_ERROR_DEVICE_NOT_READY);
-		checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
-			SSV_ERROR_OUT_OF_MEMORY_GPU);
-	}
-}
-
-void BlobBase::_DestroyCuda()
-{
-	if (_storage_gpu_device >= 0)
-	{
-		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-			SSV_ERROR_DEVICE_NOT_READY);
-		if (_data_gpu.ptr)
-		{
-			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
-				SSV_ERROR_INVALID_VALUE);
-		}
-		destroyTexture();
-	}
-
-	memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
-	memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
-	_storage_gpu_device = -1;
-	_data_texture_default_2d = 0;
-	_data_texture_default_3d = 0;
-	_data_textures.clear();
-	_data_cuda_array = nullptr;
-}
-
 BlobBase::texture_param_t BlobBase::_MakeTextureParam(
 	const cudaTextureDesc * texDesc, const cudaChannelFormatDesc * channelDesc, 
 	unsigned char dimension, uint layer_id
@@ -264,4 +225,103 @@ BlobBase::texture_param_t BlobBase::_MakeTextureParam(
 	}
 
 	return std::make_tuple(*texDesc, *channelDesc, dimension, layer_id);
+}
+
+void BlobBase::_InitCuda(int gpu_device)
+{
+	if (gpu_device < 0)
+	{
+		_storage_gpu_device = -1;
+		memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
+		memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
+		_data_texture_default_2d = 0;
+		_data_texture_default_3d = 0;
+		_data_textures.clear();
+		_data_cuda_array = nullptr;
+	}
+	else
+	{
+		_storage_gpu_device = gpu_device;
+		_data_gpu_extent = make_cudaExtent(_nx_in_bytes,_ny, _nz);
+
+		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+			SSV_ERROR_DEVICE_NOT_READY);
+		checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
+			SSV_ERROR_OUT_OF_MEMORY_GPU);
+
+		_data_texture_default_2d = 0;
+		_data_texture_default_3d = 0;
+		_data_textures.clear();
+		_data_cuda_array = nullptr;
+	}
+}
+
+void BlobBase::_CopyCuda(const BlobBase &other, int gpu_device)
+{
+	_storage_gpu_device = gpu_device;
+	_data_gpu_extent = other._data_gpu_extent;
+
+	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+		SSV_ERROR_DEVICE_NOT_READY);
+	checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
+		SSV_ERROR_OUT_OF_MEMORY_GPU);
+
+	_data_texture_default_2d = 0;
+	_data_texture_default_3d = 0;
+	_data_textures.clear();
+	_data_cuda_array = nullptr;
+}
+
+void BlobBase::_MoveCuda(BlobBase &&other)
+{
+	if (_storage_gpu_device >= 0)
+	{
+		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+			SSV_ERROR_DEVICE_NOT_READY);
+		if (_data_gpu.ptr)
+		{
+			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
+				SSV_ERROR_INVALID_VALUE);
+		}
+		destroyTexture();
+	}
+
+	_storage_gpu_device = other._storage_gpu_device;
+	_data_gpu_extent = other._data_gpu_extent;
+	_data_gpu = other._data_gpu;
+	_data_texture_default_2d = other._data_texture_default_2d;
+	_data_texture_default_3d = other._data_texture_default_3d;
+	_data_textures = std::move(other._data_textures);
+	_data_cuda_array = other._data_cuda_array;
+
+	memset(&other._data_gpu, 0, sizeof(cudaPitchedPtr));
+	memset(&other._data_gpu_extent, 0, sizeof(cudaExtent));
+	other._storage_gpu_device = -1;
+	other._data_texture_default_2d = 0;
+	other._data_texture_default_3d = 0;
+	other._data_textures.clear();
+	other._data_cuda_array = nullptr;
+}
+
+void BlobBase::_DestroyCuda()
+{
+	if (_storage_gpu_device >= 0)
+	{
+		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+			SSV_ERROR_DEVICE_NOT_READY);
+		if (_data_gpu.ptr)
+		{
+			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
+				SSV_ERROR_INVALID_VALUE);
+		}
+		destroyTexture();
+	}
+
+	memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
+	memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
+	_storage_gpu_device = -1;
+	_data_texture_default_2d = 0;
+	_data_texture_default_3d = 0;
+	_data_textures.clear();
+	_data_cuda_array = nullptr;
 }

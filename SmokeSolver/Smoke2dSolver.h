@@ -6,7 +6,11 @@
 
 #include "common.h"
 #include "SmokeSolver.h"
+
 #include "Blob.h"
+#include "AdvectionMethod.h"
+#include "EulerMethod.h"
+#include "BoundaryMethod.h"
 
 namespace ssv
 {

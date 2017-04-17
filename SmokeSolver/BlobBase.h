@@ -10,23 +10,24 @@
 
 namespace ssv
 {
+	// Base class of Blob
 	class BlobBase
 	{
 	public:
 		BlobBase();
-		~BlobBase();
-
-	public:
 		// nx: size in bytes
 		// ny, nz: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
-		void setSize(size_t nx_in_bytes, uint ny, uint nz = 1u,
+		BlobBase(size_t nx_in_bytes, uint ny, uint nz = 1u,
 			int gpu_device = 0, bool cpu_copy = true);
+		BlobBase(const BlobBase &other);
+		BlobBase &operator= (const BlobBase &other);
+		BlobBase(BlobBase &&other);
+		BlobBase &operator= (BlobBase &&other);
+		~BlobBase();
 
-		// Reset Blob parameters (as if just initialized)
-		void reset();
-
+	public:
 		// Copy Data to CPU
 		// from_gpu_data: cudaPitchedPtr from where data should be copied
 		//                [default] = nullptr: from GPU data of this Blob 
@@ -128,7 +129,9 @@ namespace ssv
 		// Copy data from pitched pointer to 3d CUDA array
 		void _CopyToCudaArray() const;
 
-		void _InitCuda(int gpu_device);
+		void _InitCuda(int gpu_device = -1);
+		void _CopyCuda(const BlobBase &other, int gpu_device);
+		void _MoveCuda(BlobBase &&other);
 		void _DestroyCuda();
 
 	protected:

@@ -25,14 +25,24 @@ namespace ssv
 		: public BlobBase
 	{
 	public:
-		// Set or reset Blob parameters
+		Blob() : BlobBase() {}
 		// nx, ny, nz: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
-		void setSize(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, bool cpu_copy = true)
-		{
-			BlobBase::setSize(nx * sizeof(_T), ny, nz, gpu_device, cpu_copy);
-		}
+		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, bool cpu_copy = true)
+			: BlobBase(nx * sizeof(_T), ny, nz, gpu_device, cpu_copy) {}
+		//Blob(const Blob<_T> &other) : BlobBase(other) {}
+		//Blob<_T> &operator= (const Blob<_T> &other)
+		//{
+		//	BlobBase::operator= (other);
+		//	return *this;
+		//}
+		//Blob(Blob<_T> &&other) : BlobBase(std::forward<Blob<_T> >(other)) {}
+		//Blob<_T> &operator= (Blob<_T> &&other)
+		//{
+		//	BlobBase::operator= (other);
+		//	return *this;
+		//}
 
 		// Return cudaTextureObject of GPU data in 2D
 		// If no texture of specific parameters exists, a new texture object will be created.
