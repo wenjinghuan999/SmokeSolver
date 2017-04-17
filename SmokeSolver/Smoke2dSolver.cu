@@ -72,7 +72,7 @@ void Smoke2dSolver::_StepCuda()
 
 	const cudaPitchedPtr *ppp = _data.data_gpu_cuda_pitched_ptr();
 	T *pd = _data.data_gpu_raw();
-	PrintRaw(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
+	PrintRawGPU(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 
 	Blob<T> another = Blob<T>(5, 2, 3);
 	const cudaPitchedPtr *ppap = another.data_gpu_cuda_pitched_ptr();
@@ -83,7 +83,7 @@ void Smoke2dSolver::_StepCuda()
 
 	cudaDeviceSynchronize();
 
-	PrintRaw(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
+	PrintRawGPU(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
 	another.copyToCpu();
 	p = another.data_cpu();
 
@@ -109,7 +109,7 @@ void Smoke2dSolver::_StepCuda()
 	bnd(u, tp, 0, make_float2(1.f, 0.5));
 
 	thrust::transform(_data.data_gpu(), _data.data_gpu() + _nx*_ny*3, _data.data_gpu(), 1.f + _1 * _1);
-	PrintRaw(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
+	PrintRawGPU(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");
 	_data.copyToCpu();
 	p = _data.data_cpu();
 

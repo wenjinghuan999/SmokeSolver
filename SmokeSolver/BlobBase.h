@@ -59,9 +59,19 @@ namespace ssv
 		// ( = nx() * ny() * nz())
 		virtual uint numel() const = 0;
 
-		// Return total number of bytes 
+		// Return total size in bytes on CPU
 		// ( = nx_in_bytes() * ny() * nz())
-		size_t size_in_bytes() const { return _size_in_bytes; }
+		size_t size_cpu_in_bytes() const 
+		{ 
+			return _nx_in_bytes * _ny * _nz;
+		}
+
+		// Return total size of bytes on GPU
+		// ( = pitch_in_bytes() * ny() * nz())
+		size_t size_gpu_in_bytes() const
+		{
+			return _data_gpu.pitch * _ny * _nz;
+		}
 
 		// Return pitch in bytes
 		// Total memory allocated = pitch_in_bytes() * ny() * nz()
@@ -142,7 +152,6 @@ namespace ssv
 	protected:
 		size_t _nx_in_bytes;
 		uint _ny, _nz;
-		size_t _size_in_bytes;
 		void *_data_cpu;
 
 	protected:

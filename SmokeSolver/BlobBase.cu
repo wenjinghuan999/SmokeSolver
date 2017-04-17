@@ -266,6 +266,14 @@ void BlobBase::_CopyCuda(const BlobBase &other, int gpu_device)
 	checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
 		SSV_ERROR_OUT_OF_MEMORY_GPU);
 
+	cudaMemcpy3DParms params = { 0 };
+	params.srcPtr = other._data_gpu;
+	params.dstPtr = _data_gpu;
+	params.kind = cudaMemcpyDeviceToDevice;
+	params.extent = _data_gpu_extent;
+	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
+		SSV_ERROR_INVALID_VALUE);
+
 	_data_texture_default_2d = 0;
 	_data_texture_default_3d = 0;
 	_data_textures.clear();

@@ -142,7 +142,7 @@ namespace ssv
 		// ( = nx() * ny() * nz())
 		virtual uint numel() const override
 		{
-			return (uint)(_size_in_bytes / sizeof(_T));
+			return (uint)(_nx_in_bytes * _ny * _nz / sizeof(_T));
 		}
 
 		// Return pitch in elements

@@ -32,7 +32,7 @@ namespace ssv
 #define checkCudaErrorAndThrow(val, throwing_error) check ((val), #val, __FILE__, __LINE__, throwing_error)
 
 	template <typename _T>
-	void PrintRaw(_T *a_dev, size_t length = 1u, std::string tag = "data")
+	void PrintRawGPU(_T *a_dev, size_t length = 1u, std::string tag = "data")
 	{
 		if (a_dev == nullptr)
 		{
@@ -42,6 +42,24 @@ namespace ssv
 
 		_T *a = new _T[length];
 		cudaMemcpy(a, a_dev, length * sizeof(_T), cudaMemcpyDeviceToHost);
+
+		std::cout << tag << ": ";
+		for (unsigned int i = 0u; i < length; i++)
+		{
+			std::cout << a[i] << " ";
+		}
+		std::cout << std::endl;
+		delete[] a;
+	}
+
+	template <typename _T>
+	void PrintRawCPU(_T *a, size_t length = 1u, std::string tag = "data")
+	{
+		if (a == nullptr)
+		{
+			std::cout << tag << " = nullptr" << std::endl;
+			return;
+		}
 
 		std::cout << tag << ": ";
 		for (unsigned int i = 0u; i < length; i++)
