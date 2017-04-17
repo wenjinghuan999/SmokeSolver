@@ -88,15 +88,17 @@ BlobBase &BlobBase::operator= (BlobBase &&other)
 {
 	if (this != &other)
 	{
-		_nx_in_bytes = other._nx_in_bytes;
-		_ny = other._ny;
-		_nz = other._nz;
-		_size_in_bytes = other._size_in_bytes;
+		_DestroyCuda();
 		if (_data_cpu)
 		{
 			delete[] _data_cpu;
 			_data_cpu = nullptr;
 		}
+
+		_nx_in_bytes = other._nx_in_bytes;
+		_ny = other._ny;
+		_nz = other._nz;
+		_size_in_bytes = other._size_in_bytes;
 		_data_cpu = other._data_cpu;
 
 		_MoveCuda(std::forward<BlobBase>(other));

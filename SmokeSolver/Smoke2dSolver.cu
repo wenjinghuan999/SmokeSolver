@@ -123,26 +123,6 @@ void Smoke2dSolver::_StepCuda()
 	euler(another, another);
 
 
-	std::cout << std::endl;
-	for (size_t k = 0; k < 3; k++)
-	{
-		for (size_t j = 0; j < _ny; j++)
-		{
-			for (size_t i = 0; i < _nx; i++)
-			{
-				std::cout << p[k * _ny * _nx + j * _nx + i] << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	for (size_t k = 0; k < _nx * _ny * 3; k++)
-	{
-		std::cout << p[k] << " ";
-	}
-	std::cout << std::endl;
-
 	texObj = _data.data_texture_2d();
 	std::cout << "TEX: " << texObj << std::endl;
 	texObj = _data.data_texture_2d();
@@ -157,53 +137,22 @@ void Smoke2dSolver::_StepCuda()
 	std::cout << "TEX: " << texObj << std::endl;
 
 
-	PrintRaw(another.data_gpu_raw(), another.pitch_in_elements() * another.ny() * another.nz(), "data:\n");
-	another.copyToCpu();
-	p = another.data_cpu();
+	std::cout << "before" << std::endl;
 
-	std::cout << "another" << std::endl;
-	for (size_t k = 0; k < 3; k++)
-	{
-		for (size_t j = 0; j < _ny; j++)
-		{
-			for (size_t i = 0; i < _nx; i++)
-			{
-				std::cout << p[k * _ny * _nx + j * _nx + i] << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
+	PrintBlobGPU(another, "another");
+	PrintBlobCPU(another, "another");
+	PrintBlobGPU(_data, "_data");
+	PrintBlobCPU(_data, "_data");
 
-	texObj = _data.data_texture_3d();
-	kernelWWW << <2, 5 >> >(texObj, *ppap);
+	std::swap(_data, another);
 
-	cudaDeviceSynchronize();
+	std::cout << "after" << std::endl;
 
-	PrintRaw(another.data_gpu_raw(), ppap->pitch / sizeof(T) * ppap->ysize * 3, "data:\n");
-	another.copyToCpu();
-	p = another.data_cpu();
+	PrintBlobGPU(another, "another");
+	PrintBlobCPU(another, "another");
+	PrintBlobGPU(_data, "_data");
+	PrintBlobCPU(_data, "_data");
 
-	another = _data;
-
-	std::cout << "another" << std::endl;
-	for (size_t k = 0; k < 3; k++)
-	{
-		for (size_t j = 0; j < _ny; j++)
-		{
-			for (size_t i = 0; i < _nx; i++)
-			{
-				std::cout << p[k * _ny * _nx + j * _nx + i] << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	another = Blob<T>(5,4,3);
-
-	std::cout << "u" << std::endl;
-	PrintBlobGPU(another);
 }
 
 void Smoke2dSolver::_DestroyCuda()

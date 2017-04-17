@@ -274,18 +274,6 @@ void BlobBase::_CopyCuda(const BlobBase &other, int gpu_device)
 
 void BlobBase::_MoveCuda(BlobBase &&other)
 {
-	if (_storage_gpu_device >= 0)
-	{
-		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-			SSV_ERROR_DEVICE_NOT_READY);
-		if (_data_gpu.ptr)
-		{
-			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
-				SSV_ERROR_INVALID_VALUE);
-		}
-		destroyTexture();
-	}
-
 	_storage_gpu_device = other._storage_gpu_device;
 	_data_gpu_extent = other._data_gpu_extent;
 	_data_gpu = other._data_gpu;

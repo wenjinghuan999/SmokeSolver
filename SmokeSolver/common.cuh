@@ -57,11 +57,27 @@ namespace ssv
 	{
 		for (uint z = 0; z < b.nz(); z++)
 		{
-			std::cout << tag << "(:,:," << z << "):\n";
+			std::cout << tag << "<GPU>(:,:," << z << "):\n";
 			for (uint y = 0; y < b.ny(); y++)
 			{
 				thrust::copy(b.data_gpu() + z * b.ny() * b.nx() + y * b.nx(),
 					b.data_gpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(std::cout, " "));
+				std::cout << std::endl;
+			}
+			std::cout << std::endl;
+		}
+	}
+
+	template <typename _T>
+	void PrintBlobCPU(const Blob<_T> &b, std::string tag = "data")
+	{
+		for (uint z = 0; z < b.nz(); z++)
+		{
+			std::cout << tag << "<CPU>(:,:," << z << "):\n";
+			for (uint y = 0; y < b.ny(); y++)
+			{
+				std::copy(b.data_cpu() + z * b.ny() * b.nx() + y * b.nx(),
+					b.data_cpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(std::cout, " "));
 				std::cout << std::endl;
 			}
 			std::cout << std::endl;
