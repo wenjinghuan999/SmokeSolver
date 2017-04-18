@@ -3,26 +3,19 @@
 #include "EulerMethod.h"
 using namespace ssv;
 
-
-template <typename QType>
-static __global__ void kernelEulerMethodForward(
-	BlobWrapper<QType> q, BlobWrapperConst<QType> d
-)
-{
-	size_t y = blockIdx.x;
-	size_t x = threadIdx.x;
-
-	q(x, y) += d(x, y);
-}
+#include <thrust/transform.h>
+using thrust::placeholders::_1;
+using thrust::placeholders::_2;
 
 template <typename QType>
 void EulerMethodForward<QType>::operator() (
 	Blob<QType> &q, const Blob<QType> &d
 	) const
 {
-	kernelEulerMethodForward <<<q.ny(), q.nx()>>>(
-		q.wrapper(), d.wrapper_const()
-		);
+	thrust::transform(
+		q.data_gpu_begin(), q.data_gpu_end(), d.data_gpu_begin(), q.data_gpu_begin(),
+		_1 + _2
+	);
 }
 
 template class EulerMethodForward<T>;
