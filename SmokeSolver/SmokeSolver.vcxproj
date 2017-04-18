@@ -98,17 +98,19 @@
     <None Include="Smoke2d.proto" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AdvectionMethod.h" />
+    <ClInclude Include="AdvectMethod.h" />
     <ClInclude Include="Blob.h" />
     <ClInclude Include="BlobBase.h" />
     <ClInclude Include="BoundaryMethod.h" />
     <ClInclude Include="debug_output.cuh" />
     <ClInclude Include="debug_output.h" />
     <ClInclude Include="EulerMethod.h" />
+    <ClInclude Include="ForceMethod.h" />
     <ClInclude Include="hash_tuple.h" />
     <ClInclude Include="pitched_ptr.h" />
     <ClInclude Include="common.cuh" />
     <ClInclude Include="common.h" />
+    <ClInclude Include="PoissonMethod.h" />
     <ClInclude Include="Smoke2d.grpc.pb.h" />
     <ClInclude Include="Smoke2d.pb.h" />
     <ClInclude Include="Smoke2dSolver.h" />
@@ -116,13 +118,15 @@
     <ClInclude Include="unary_ops.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="AdvectionMethod.cu" />
+    <CudaCompile Include="AdvectMethod.cu" />
     <CudaCompile Include="BlobBase.cu">
       <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </AdditionalDeps>
     </CudaCompile>
     <CudaCompile Include="BoundaryMethod.cu" />
     <CudaCompile Include="EulerMethod.cu" />
+    <CudaCompile Include="ForceMethod.cu" />
+    <CudaCompile Include="PoissonMethod.cu" />
     <CudaCompile Include="Smoke2dSolver.cu">
       <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </AdditionalDeps>

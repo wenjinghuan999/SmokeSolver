@@ -31,14 +31,20 @@
     <Filter Include="Methods">
       <UniqueIdentifier>{6c3f6b1d-e351-4633-a2b4-74a00ff15312}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Methods\AdvectionMethod">
-      <UniqueIdentifier>{f95ac5e4-9c3e-4822-8bf5-a44e6cd4e111}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Methods\EulerMethod">
       <UniqueIdentifier>{4cbde66d-35b0-4c5f-af33-cef779050d3e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Methods\BoundaryMethod">
       <UniqueIdentifier>{4fb4c381-c3e6-4a6d-ad30-83676e85b911}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Methods\ForceMethod">
+      <UniqueIdentifier>{6aef072d-181b-4dc9-8488-a189658e3459}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Methods\AdvectMethod">
+      <UniqueIdentifier>{f95ac5e4-9c3e-4822-8bf5-a44e6cd4e111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Methods\PoissonMethod">
+      <UniqueIdentifier>{b0a16fb2-d2ac-457c-a513-25f06eac329b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -92,9 +98,6 @@
     <ClInclude Include="SmokeSolver.h">
       <Filter>SmokeSolver</Filter>
     </ClInclude>
-    <ClInclude Include="AdvectionMethod.h">
-      <Filter>Methods\AdvectionMethod</Filter>
-    </ClInclude>
     <ClInclude Include="EulerMethod.h">
       <Filter>Methods\EulerMethod</Filter>
     </ClInclude>
@@ -113,6 +116,15 @@
     <ClInclude Include="debug_output.cuh">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="ForceMethod.h">
+      <Filter>Methods\ForceMethod</Filter>
+    </ClInclude>
+    <ClInclude Include="AdvectMethod.h">
+      <Filter>Methods\AdvectMethod</Filter>
+    </ClInclude>
+    <ClInclude Include="PoissonMethod.h">
+      <Filter>Methods\PoissonMethod</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Smoke2dSolver.cu">
@@ -121,14 +133,20 @@
     <CudaCompile Include="BlobBase.cu">
       <Filter>Blob</Filter>
     </CudaCompile>
-    <CudaCompile Include="AdvectionMethod.cu">
-      <Filter>Methods\AdvectionMethod</Filter>
-    </CudaCompile>
     <CudaCompile Include="EulerMethod.cu">
       <Filter>Methods\EulerMethod</Filter>
     </CudaCompile>
     <CudaCompile Include="BoundaryMethod.cu">
       <Filter>Methods\BoundaryMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ForceMethod.cu">
+      <Filter>Methods\ForceMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="AdvectMethod.cu">
+      <Filter>Methods\AdvectMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="PoissonMethod.cu">
+      <Filter>Methods\PoissonMethod</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

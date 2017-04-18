@@ -117,8 +117,8 @@ void Smoke2dSolver::_StepCuda()
 	p = _data.data_cpu();
 
 
-	AdvectionMethodSemiLagrangian<T> adv_lag;
-	AdvectionMethod<T> &adv = adv_lag;
+	AdvectMethodSemiLagrangian<T> adv_lag;
+	AdvectMethod<T> &adv = adv_lag;
 	adv(another, _data, u);
 
 	EulerMethodForward<T> euler_forward;

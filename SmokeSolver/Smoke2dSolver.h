@@ -8,7 +8,7 @@
 #include "SmokeSolver.h"
 
 #include "Blob.h"
-#include "AdvectionMethod.h"
+#include "AdvectMethod.h"
 #include "EulerMethod.h"
 #include "BoundaryMethod.h"
 

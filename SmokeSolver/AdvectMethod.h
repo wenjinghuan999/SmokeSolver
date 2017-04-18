@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef __ADVECTION_METHOD_H__
-#define __ADVECTION_METHOD_H__
+#ifndef __ADVECT_METHOD_H__
+#define __ADVECT_METHOD_H__
 
 #include "common.h"
 #include "Blob.h"
@@ -14,7 +14,7 @@ namespace ssv
 	// ---- = -(u . \/) q
 	//  dt
 	template <typename QType>
-	class AdvectionMethod
+	class AdvectMethod
 	{
 	public:
 		// 2D
@@ -28,16 +28,18 @@ namespace ssv
 	};
 
 	template <typename QType>
-	class AdvectionMethodSemiLagrangian : public AdvectionMethod<QType>
+	class AdvectMethodSemiLagrangian : public AdvectMethod<QType>
 	{
 	public:
+		// 2D
 		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 			) const override;
+		// 3D
 		virtual void operator() (
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 			) const override;
 	};
 }
 
-#endif // !__ADVECTION_METHOD_H__
+#endif // !__ADVECT_METHOD_H__

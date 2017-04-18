@@ -1,11 +1,16 @@
 
 #include "common.cuh"
-#include "AdvectionMethod.h"
+#include "AdvectMethod.h"
 using namespace ssv;
 
 
+// Semi-Lagrangian Advection
+// LAUNCH : block (ny), thread (nx)
+// p : nx x ny
+// q : nx x ny
+// u : nx x ny
 template <typename QType>
-static __global__ void kernelAdvectionMethodSemiLagrangian(
+static __global__ void kernelAdvectMethodSemiLagrangian(
 	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T2> u
 )
 {
@@ -17,8 +22,13 @@ static __global__ void kernelAdvectionMethodSemiLagrangian(
 	qout(x, y) = tex2D<QType>(q, p0.x, p0.y);
 }
 
+// Semi-Lagrangian Advection
+// LAUNCH : block (ny, nz), thread (nx)
+// p : nx x ny x nz
+// q : nx x ny x nz
+// u : nx x ny x nz
 template <typename QType>
-static __global__ void kernelAdvectionMethodSemiLagrangian(
+static __global__ void kernelAdvectMethodSemiLagrangian(
 	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T4> u
 )
 {
@@ -33,25 +43,25 @@ static __global__ void kernelAdvectionMethodSemiLagrangian(
 
 
 template <typename QType>
-void AdvectionMethodSemiLagrangian<QType>::operator () (
+void AdvectMethodSemiLagrangian<QType>::operator () (
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 	) const
 {
-	kernelAdvectionMethodSemiLagrangian<<<q.ny(), q.nx()>>>(
+	kernelAdvectMethodSemiLagrangian<<<q.ny(), q.nx()>>>(
 		qout.wrapper(), q.data_texture_2d(), u.wrapper_const()
 	);
 }
 
 template <typename QType>
-void AdvectionMethodSemiLagrangian<QType>::operator () (
+void AdvectMethodSemiLagrangian<QType>::operator () (
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 	) const
 {
-	kernelAdvectionMethodSemiLagrangian<<<q.ny(), q.nx()>>>(
-		qout.wrapper(), q.data_texture_2d(), u.wrapper_const()
+	kernelAdvectMethodSemiLagrangian<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+		qout.wrapper(), q.data_texture_3d(), u.wrapper_const()
 		);
 }
 
-template class AdvectionMethodSemiLagrangian<T>;
-template class AdvectionMethodSemiLagrangian<T2>;
-template class AdvectionMethodSemiLagrangian<T4>;
+template class AdvectMethodSemiLagrangian<T>;
+template class AdvectMethodSemiLagrangian<T2>;
+template class AdvectMethodSemiLagrangian<T4>;
