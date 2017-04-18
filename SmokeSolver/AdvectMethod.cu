@@ -14,10 +14,10 @@ static __global__ void kernelAdvectMethodSemiLagrangian(
 	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T2> u
 )
 {
-	size_t y = blockIdx.x;
-	size_t x = threadIdx.x;
+	uint y = blockIdx.x;
+	uint x = threadIdx.x;
 
-	T2 p0 = make_float2(x, y) + 0.5f - u(x, y);
+	T2 p0 = make_float2(x, y) + (T)(0.5) - u(x, y);
 
 	qout(x, y) = tex2D<QType>(q, p0.x, p0.y);
 }
@@ -32,11 +32,11 @@ static __global__ void kernelAdvectMethodSemiLagrangian(
 	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T4> u
 )
 {
-	size_t z = blockIdx.y;
-	size_t y = blockIdx.x;
-	size_t x = threadIdx.x;
+	uint z = blockIdx.y;
+	uint y = blockIdx.x;
+	uint x = threadIdx.x;
 
-	T4 p0 = make_float4(x, y, z, 0) + 0.5f - u(x, y, z);
+	T4 p0 = make_float4(x, y, z, 0) + (T)(0.5) - u(x, y, z);
 
 	qout(x, y, z) = tex3D<QType>(q, p0.x, p0.y, p0.z);
 }
