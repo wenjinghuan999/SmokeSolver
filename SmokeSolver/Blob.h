@@ -25,24 +25,26 @@ namespace ssv
 		: public BlobBase
 	{
 	public:
+		typedef BlobBase::shape_t shape_t;
+		typedef BlobWrapper<_T> wrapper_t;
+		typedef BlobWrapperConst<_T> wrapper_const_t;
+
+	public:
 		Blob() : BlobBase() {}
+
 		// nx, ny, nz: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
 		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, bool cpu_copy = true)
 			: BlobBase(nx * sizeof(_T), ny, nz, gpu_device, cpu_copy) {}
-		//Blob(const Blob<_T> &other) : BlobBase(other) {}
-		//Blob<_T> &operator= (const Blob<_T> &other)
-		//{
-		//	BlobBase::operator= (other);
-		//	return *this;
-		//}
-		//Blob(Blob<_T> &&other) : BlobBase(std::forward<Blob<_T> >(other)) {}
-		//Blob<_T> &operator= (Blob<_T> &&other)
-		//{
-		//	BlobBase::operator= (other);
-		//	return *this;
-		//}
+
+		// shape: size in elements
+		// gpu_device: cuda device id
+		// cpu_copy: if true, copying from and to CPU is enabled
+		Blob(std::tuple<uint, uint, uint> shape, int gpu_device = 0, bool cpu_copy = true)
+			: BlobBase(std::get<0>(shape) * sizeof(_T), std::get<1>(shape), std::get<2>(shape),
+				gpu_device, cpu_copy) {}
+
 
 		// Return cudaTextureObject of GPU data in 2D
 		// If no texture of specific parameters exists, a new texture object will be created.
@@ -145,6 +147,13 @@ namespace ssv
 			return (uint)(_nx_in_bytes * _ny * _nz / sizeof(_T));
 		}
 
+		// Return shape 
+		// ( = make_tuple(nx(), ny(), nz()))
+		virtual shape_t shape() const override
+		{
+			return std::make_tuple((uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz);
+		}
+
 		// Return pitch in elements
 		// Total memory allocated = pitch_in_elements * ny * nz * sizeof(_T)
 		virtual uint pitch_in_elements() const override
@@ -245,51 +254,24 @@ namespace ssv
 		}
 
 		// Return BlobWrapper of this Blob
-		BlobWrapper<_T> wrapper() 
+		wrapper_t wrapper()
 		{
-			return BlobWrapper<_T> {
+			return wrapper_t{
 				static_cast<_T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
 					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
 		}
 
 		// Return BlobWrapperConst of this Blob
-		BlobWrapperConst<_T> wrapper_const() const
+		wrapper_const_t wrapper_const() const
 		{
-			return BlobWrapperConst<_T> {
+			return wrapper_const_t{
 				static_cast<const _T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
 					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
 		}
 	};
 
-
 	// A light-weighted helper class for easier kernel implementation using Blob
-	template <typename _T>
-	struct BlobWrapper
-	{
-		_T *ptr;
-		uint pitch;
-		uint nx;
-		uint ny;
-		uint nz;
-
-		operator BlobWrapperConst<_T>() const
-		{
-			return BlobWrapperConst<_T> { ptr, pitch, nx, ny, nz };
-		}
-
-		__device__ _T &operator()(uint x, uint y, uint z)
-		{
-			return ptr[z * pitch * ny + y * pitch + x];
-		}
-
-		__device__ _T &operator()(uint x, uint y)
-		{
-			return ptr[y * pitch + x];
-		}
-	};
-
-	// A light-weighted helper class for easier kernel implementation using Blob
-	template <typename _T>
+	template<typename _T>
 	struct BlobWrapperConst
 	{
 		const _T *ptr;
@@ -308,7 +290,32 @@ namespace ssv
 			return ptr[y * pitch + x];
 		}
 	};
-}
 
+	// A light-weighted helper class for easier kernel implementation using Blob
+	template<typename _T>
+	struct BlobWrapper
+	{
+		_T *ptr;
+		uint pitch;
+		uint nx;
+		uint ny;
+		uint nz;
+
+		operator BlobWrapperConst() const
+		{
+			return BlobWrapperConst{ ptr, pitch, nx, ny, nz };
+		}
+
+		__device__ _T &operator()(uint x, uint y, uint z)
+		{
+			return ptr[z * pitch * ny + y * pitch + x];
+		}
+
+		__device__ _T &operator()(uint x, uint y)
+		{
+			return ptr[y * pitch + x];
+		}
+	};
+}
 
 #endif // !__BLOB_H__

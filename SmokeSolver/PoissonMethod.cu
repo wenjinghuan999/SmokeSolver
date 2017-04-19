@@ -5,6 +5,8 @@ using namespace ssv;
 
 namespace
 {
+	using ssv::uint;
+
 	// Red-black Gauss-Seidel
 	// LAUNCH : block (ny - 2), thread (nx - 2)
 	// p : nx x ny
@@ -13,7 +15,8 @@ namespace
 	// redblack : 0 or 1 indicating red or black
 	template <typename QType>
 	__global__ void kernelGS2d(
-		BlobWrapper<QType> q, BlobWrapperConst<QType> g, T omega, uint redblack
+		Blob<QType>::wrapper_t q, Blob<QType>::wrapper_const_t g, 
+		T omega, uint redblack
 	)
 	{
 		uint y = blockIdx.x * 2u + 1u;
@@ -39,7 +42,8 @@ namespace
 	// redblack : 0 or 1 indicating red or black
 	template <typename QType>
 	__global__ void kernelGS3d(
-		BlobWrapper<QType> q, BlobWrapperConst<QType> g, T omega, uint redblack
+		Blob<QType>::wrapper_t q, Blob<QType>::wrapper_const_t g, 
+		T omega, uint redblack
 	)
 	{
 		uint z = blockIdx.y * 2u + 1u;
@@ -57,7 +61,8 @@ namespace
 		v += q(x, y, z - 1u);
 		v += q(x, y, z + 1u);
 
-		q(x, y, z) = omega * (v - g(x, y, z)) / (T)(6) + ((T)(1) - omega) * q(x, y, z);
+		q(x, y, z) = omega * (v - g(x, y, z)) / (T)(6) 
+			+ ((T)(1) - omega) * q(x, y, z);
 	}
 }
 
@@ -68,20 +73,44 @@ void PoissonMethodGS<QType>::operator()(
 {
 	if (q.nz() < 3u)
 	{
-		kernelGS2d<<<(q.ny() - 2u) / 2u, q.nx() - 2u>>>(
-			q.wrapper(), g.wrapper_const(), (T)(1), 0
-		);
-		kernelGS2d<<<(q.ny() - 2u) / 2u, q.nx() - 2u>>>(
-			q.wrapper(), g.wrapper_const(), (T)(1), 1u
-		);
+		for (uint i = 0; i < _iterations; i++)
+		{
+			kernelGS2d<<<(q.ny() - 2u) / 2u, q.nx() - 2u>>>(
+				q.wrapper(), g.wrapper_const(), (T)(1), 0
+			);
+			kernelGS2d<<<(q.ny() - 2u) / 2u, q.nx() - 2u>>>(
+				q.wrapper(), g.wrapper_const(), (T)(1), 1u
+			);
+		}
 	}
 	else
 	{
-		kernelGS3d<<<dim3(q.ny() - 2u, (q.nz() - 2u) / 2u), q.nx() - 2u>>>(
-			q.wrapper(), g.wrapper_const(), (T)(1), 0
-		);
-		kernelGS3d<<<dim3(q.ny() - 2u, (q.nz() - 2u) / 2u), q.nx() - 2u>>>(
-			q.wrapper(), g.wrapper_const(), (T)(1), 1u
-		);
+		for (uint i = 0; i < _iterations; i++)
+		{
+			kernelGS3d<<<dim3(q.ny() - 2u, (q.nz() - 2u) / 2u), q.nx() - 2u>>>(
+				q.wrapper(), g.wrapper_const(), (T)(1), 0
+			);
+			kernelGS3d<<<dim3(q.ny() - 2u, (q.nz() - 2u) / 2u), q.nx() - 2u>>>(
+				q.wrapper(), g.wrapper_const(), (T)(1), 1u
+			);
+		}
+	}
+}
+
+template class PoissonMethodGS<T>;
+
+
+
+template<typename QType>
+void PoissonMethodVCycle<QType>::operator()(Blob<QType>& q, const Blob<QType>& g) const
+{
+	if (_buffers.empty() || _buffers.front().shape() != q.shape())
+	{
+		_buffers.clear();
+
+		for (uint i = 0; i < _levels; i++)
+		{
+			_buffers.emplace_back(q.shape(), q.gpu_device(), false);
+		}
 	}
 }

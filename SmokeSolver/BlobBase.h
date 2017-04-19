@@ -14,10 +14,13 @@ namespace ssv
 	class BlobBase
 	{
 	public:
+		typedef std::tuple<uint, uint, uint> shape_t;
+
+	public:
 		BlobBase();
 		// nx: size in bytes
 		// ny, nz: size in elements
-		// gpu_device: cuda device id
+		// gpu_device: cuda device id for underlying storage
 		// cpu_copy: if true, copying from and to CPU is enabled
 		BlobBase(size_t nx_in_bytes, uint ny, uint nz = 1u,
 			int gpu_device = 0, bool cpu_copy = true);
@@ -58,6 +61,13 @@ namespace ssv
 		// Return total number of elements 
 		// ( = nx() * ny() * nz())
 		virtual uint numel() const = 0;
+
+		// Return shape 
+		// ( = make_tuple(nx(), ny(), nz()))
+		virtual shape_t shape() const = 0;
+
+		// Return GPU device id of underlying storage
+		int gpu_device() const { return _storage_gpu_device; }
 
 		// Return total size in bytes on CPU
 		// ( = nx_in_bytes() * ny() * nz())

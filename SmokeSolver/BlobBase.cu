@@ -6,6 +6,7 @@ using namespace ssv;
 
 void BlobBase::copyToCpu(cudaPitchedPtr *from_gpu_data)
 {
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
@@ -26,6 +27,7 @@ void BlobBase::copyToCpu(cudaPitchedPtr *from_gpu_data)
 
 void BlobBase::copyToGpu(void *from_cpu_data)
 {
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
@@ -46,6 +48,7 @@ void BlobBase::copyToGpu(void *from_cpu_data)
 
 void BlobBase::destroyTexture(cudaTextureObject_t texture_object)
 {
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
@@ -118,6 +121,7 @@ cudaTextureObject_t BlobBase::_CreateTexture2d(
 		throw SSV_ERROR_INVALID_VALUE;
 	}
 
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
@@ -155,6 +159,7 @@ cudaTextureObject_t BlobBase::_CreateTexture3d(
 		throw SSV_ERROR_INVALID_VALUE;
 	}
 
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 
@@ -184,6 +189,7 @@ cudaTextureObject_t BlobBase::_CreateTexture3d(
 
 void BlobBase::_CopyToCudaArray() const
 {
+	if (_storage_gpu_device < 0) throw SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		SSV_ERROR_DEVICE_NOT_READY);
 

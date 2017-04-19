@@ -11,7 +11,7 @@ using namespace ssv;
 // u : nx x ny
 template <typename QType>
 static __global__ void kernelAdvectMethodSemiLagrangian(
-	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T2> u
+	Blob<QType>::wrapper_t qout, cudaTextureObject_t q, Blob<T2>::wrapper_const_t u
 )
 {
 	uint y = blockIdx.x;
@@ -29,7 +29,7 @@ static __global__ void kernelAdvectMethodSemiLagrangian(
 // u : nx x ny x nz
 template <typename QType>
 static __global__ void kernelAdvectMethodSemiLagrangian(
-	BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T4> u
+	Blob<QType>::wrapper_t qout, cudaTextureObject_t q, Blob<T4>::wrapper_const_t u
 )
 {
 	uint z = blockIdx.y;
