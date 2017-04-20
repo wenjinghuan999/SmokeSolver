@@ -11,7 +11,7 @@ BlobBase::BlobBase()
 BlobBase::BlobBase(size_t nx_in_bytes, uint ny, uint nz,
 	int gpu_device, bool cpu_copy)
 {
-	if (nx_in_bytes == 0 || ny == 0)
+	if (nx_in_bytes == 0 || ny == 0 || nz == 0)
 	{
 		throw SSV_ERROR_INVALID_VALUE;
 	}

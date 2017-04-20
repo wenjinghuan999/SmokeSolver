@@ -301,9 +301,9 @@ namespace ssv
 		uint ny;
 		uint nz;
 
-		operator BlobWrapperConst() const
+		operator BlobWrapperConst<_T>() const
 		{
-			return BlobWrapperConst{ ptr, pitch, nx, ny, nz };
+			return BlobWrapperConst<_T>{ ptr, pitch, nx, ny, nz };
 		}
 
 		__device__ _T &operator()(uint x, uint y, uint z)
