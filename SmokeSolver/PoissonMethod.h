@@ -45,9 +45,13 @@ namespace ssv
 			Blob<QType> &q, const Blob<QType> &g
 			) const override;
 	private:
+		static Blob<QType>::shape_t _NextShape(const Blob<QType>::shape_t &shape);
+		static void _DownSample(Blob<QType> &qout, const Blob<QType> &qin);
+		static void _UpSample(Blob<QType> &qout, const Blob<QType> &qin);
+	private:
 		ssv::uint _levels;
-		PoissonMethodGS _gs;
-		std::vector<Blob<QType> > _buffers;
+		PoissonMethodGS<QType> _gs;
+		mutable std::vector<Blob<QType> > _buffers;
 	};
 }
 
