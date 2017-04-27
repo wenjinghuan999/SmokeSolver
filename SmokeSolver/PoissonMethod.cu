@@ -187,8 +187,8 @@ namespace
 }
 
 template <typename QType>
-Blob<QType>::shape_t PoissonMethodVCycle<QType>::_NextShape(
-	const Blob<QType>::shape_t &shape
+typename Blob<QType>::shape_t PoissonMethodVCycle<QType>::_NextShape(
+	const typename Blob<QType>::shape_t &shape
 )
 {
 	uint nx, ny, nz;

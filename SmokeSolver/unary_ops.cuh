@@ -16,7 +16,7 @@ namespace ssv
 			typedef _T result_type;
 			_T val;
 			assign(_T val) : val(val) {}
-			__host__ __device__ const _T operator() (const _T &) const { return val; }
+			__host__ __device__ _T operator() (const _T &) const { return val; }
 		};
 	}
 }

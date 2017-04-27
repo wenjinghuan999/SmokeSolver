@@ -5,35 +5,18 @@
 using namespace ssv;
 
 #include <thrust/transform.h>
-using thrust::placeholders::_1;
 
 
-template <typename QType, typename TpType>
-void BoundaryMethodClamp<QType, TpType>::operator() (
-	Blob<QType> &q, const Blob<TpType> &tp, TpType tp1, QType q1
+template <typename TpType, typename QType>
+void BoundaryMethodClampAll<TpType, QType>::operator() (
+	const Blob<TpType> &tp, Blob<QType> &q
 	) const
 {
-	thrust::transform_if(
-		q.data_gpu_begin(), q.data_gpu_end(), tp.data_gpu_begin(), q.data_gpu_begin(), 
-		ops::assign<QType>(q1), _1 == tp1
-	);
+	BoundaryOpClamp<TpType, QType> op(tp1, q1);
+	thrust::transform(tp.data_gpu_begin(), tp.data_gpu_end(),
+		q.data_gpu_begin(), q.data_gpu_begin(), op);
 }
 
-template <typename QType, typename TpType>
-void BoundaryMethodClamp<QType, TpType>::operator() (
-	Blob<QType> &q, const Blob<TpType> &tp, TpType tp1, QType q1, TpType tp2, QType q2
-	) const
-{
-	thrust::transform_if(
-		q.data_gpu_begin(), q.data_gpu_end(), tp.data_gpu_begin(), q.data_gpu_begin(),
-		ops::assign<QType>(q1), _1 == tp1
-	);
-	thrust::transform_if(
-		q.data_gpu_begin(), q.data_gpu_end(), tp.data_gpu_begin(), q.data_gpu_begin(),
-		ops::assign<QType>(q2), _1 == tp2
-	);
-}
-
-template class BoundaryMethodClamp<T, byte>;
-template class BoundaryMethodClamp<T2, byte>;
-template class BoundaryMethodClamp<T4, byte>;
+template class BoundaryMethodClampAll<byte, T>;
+template class BoundaryMethodClampAll<byte, T2>;
+template class BoundaryMethodClampAll<byte, T4>;

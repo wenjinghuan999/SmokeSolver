@@ -10,11 +10,13 @@
 
 namespace ssv
 {
+	typedef std::tuple<uint, uint, uint> BlobShape;
+
 	// Base class of Blob
 	class BlobBase
 	{
 	public:
-		typedef std::tuple<uint, uint, uint> shape_t;
+		typedef BlobShape shape_t;
 
 	public:
 		BlobBase();

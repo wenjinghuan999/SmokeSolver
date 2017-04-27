@@ -38,6 +38,13 @@ static __global__ void kernelWWW(
 }
 
 
+std::ostream &operator<< (std::ostream &out, float2 q)
+{
+	out << q.x << "," << q.y;
+	return out;
+}
+
+
 void Smoke2dSolver::_StepCuda()
 {
 	cudaSetDevice(0);
@@ -108,8 +115,9 @@ void Smoke2dSolver::_StepCuda()
 
 	Blob<byte> tp(5, 2, 3);
 
-	BoundaryMethodClamp<T2, byte> bnd;
-	bnd(u, tp, 0, make_float2(1.f, 0.5));
+	BoundaryMethodClampAll<byte, T2> bnd(0, make_float2(1.f, 0.5));
+	bnd(tp, u);
+	PrintBlobGPU(u, "uu");
 
 	thrust::transform(_data.data_gpu(), _data.data_gpu() + _nx*_ny*3, _data.data_gpu(), 1.f + _1 * _1);
 	PrintRawGPU(pd, _data.pitch_in_elements() * _data.ny() * _data.nz(), "data:\n");

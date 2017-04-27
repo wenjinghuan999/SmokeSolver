@@ -45,7 +45,8 @@ namespace ssv
 			Blob<QType> &q, const Blob<QType> &g
 			) const override;
 	private:
-		static Blob<QType>::shape_t _NextShape(const Blob<QType>::shape_t &shape);
+		static typename Blob<QType>::shape_t _NextShape(
+			const typename Blob<QType>::shape_t &shape);
 		static void _DownSample(Blob<QType> &qout, const Blob<QType> &qin);
 		static void _UpSample(Blob<QType> &qout, const Blob<QType> &qin);
 		void _VCycle(uint level) const;

@@ -95,6 +95,7 @@ int main()
 
 	Smoke2dSolver solver;
 	solver.setSize(5, 2);
+	solver.setAdvectMethod<AdvectMethodSemiLagrangian<T> >();
 	solver.init();
 	solver.step();
 
