@@ -127,10 +127,6 @@
     <CudaCompile Include="EulerMethod.cu" />
     <CudaCompile Include="ForceMethod.cu" />
     <CudaCompile Include="PoissonMethod.cu" />
-    <CudaCompile Include="Smoke2dSolver.cu">
-      <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </AdditionalDeps>
-    </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

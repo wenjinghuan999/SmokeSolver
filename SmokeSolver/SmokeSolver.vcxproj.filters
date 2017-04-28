@@ -127,9 +127,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Smoke2dSolver.cu">
-      <Filter>Smoke2dSolver</Filter>
-    </CudaCompile>
     <CudaCompile Include="BlobBase.cu">
       <Filter>Blob</Filter>
     </CudaCompile>
