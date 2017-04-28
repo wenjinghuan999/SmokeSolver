@@ -1,6 +1,5 @@
 
 #include "common.cuh"
-#include "unary_ops.cuh"
 #include "BoundaryMethod.h"
 using namespace ssv;
 

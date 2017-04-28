@@ -7,6 +7,8 @@
 #include <cuda_runtime.h>
 #include <google/protobuf/stubs/common.h>
 
+#include <type_traits>
+
 
 namespace ssv
 {
@@ -17,7 +19,7 @@ namespace ssv
 	typedef ::google::protobuf::uint8 byte;
 	typedef ::google::protobuf::uint uint;
 
-	typedef enum
+	enum class error_t : unsigned int
 	{
 		SSV_SUCCESS = 0,
 		SSV_ERROR_INVALID_VALUE = 7001,
@@ -27,7 +29,13 @@ namespace ssv
 		SSV_ERROR_TEXTURE_NOT_INITIALIZED = 7005,
 		SSV_ERROR_DEVICE_NOT_READY = 7006,
 		SSV_ERROR_UNKNOWN = 7999
-	} error_t;
+	};
+
+	template<typename EnumType>
+	constexpr typename std::underlying_type<EnumType>::type underlying(EnumType e)
+	{
+		return static_cast<typename std::underlying_type<EnumType>::type>(e);
+	}
 }
 
 #endif // !__COMMON_H__

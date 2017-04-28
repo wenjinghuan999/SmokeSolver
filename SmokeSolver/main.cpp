@@ -94,14 +94,24 @@ int main()
 	//ts.join();
 
 	Smoke2dSolver solver;
-	solver.setSize(5, 2);
+	solver.setSize(16, 16);
 	solver.setAdvectMethod(AdvectMethodSemiLagrangian());
 	solver.setEulerMethod(EulerMethodForward());
 	solver.setPoissonMethod(PoissonMethodVCycle(3, 7));
-	solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp<T, byte>{1, 0}));
-	solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp<T2, byte>{make_float2(1.f, 0.5f), 0}));
-	solver.setForceMethod(ForceMethodSimple(0.03f, 2.5f, 0.f));
+	solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp2<T, byte>{
+		0,		underlying(Smoke2dSolver::CellType::CellTypeWall), 
+		1.f,	underlying(Smoke2dSolver::CellType::CellTypeSource)
+	}));
+	solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp2<T2, byte>{
+		make_float2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
+		make_float2(0.f, 0.5f), underlying(Smoke2dSolver::CellType::CellTypeSource)
+	}));
+	solver.setForceMethod(ForceMethodSimple(0.003f, 0.25f, 0.f));
+
 	solver.init();
+	solver.addSource(6, 9, 0, 2);
+
+	while(1)
 	solver.step();
 
 
