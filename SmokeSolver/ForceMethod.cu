@@ -41,8 +41,8 @@ void ForceMethodSimple::operator()<FType>(
 	Blob<FType>& fout, const Blob<T>& rh, const Blob<T>& tm
 	) const
 {
-	thrust::transform(rh.data_gpu_begin(), rh.data_gpu_end(),
-		tm.data_gpu_begin(), fout.data_gpu_begin(),
+	thrust::transform(rh.begin_gpu(), rh.end_gpu(),
+		tm.begin_gpu(), fout.begin_gpu(),
 		simple_buoyancy<FType>{_alpha, _beta, _tm0});
 }
 

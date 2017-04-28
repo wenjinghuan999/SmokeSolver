@@ -13,7 +13,7 @@ void EulerMethodForward::operator()(
 	) const
 {
 	thrust::transform(
-		q.data_gpu_begin(), q.data_gpu_end(), d.data_gpu_begin(), q.data_gpu_begin(),
+		q.begin_gpu(), q.end_gpu(), d.begin_gpu(), q.begin_gpu(),
 		_1 + _2
 	);
 }

@@ -175,28 +175,28 @@ namespace ssv
 
 		// Begining pointer of CPU data
 		// = data_cpu()
-		const _T *data_cpu_begin() const
+		const _T *begin_cpu() const
 		{
 			return static_cast<const _T *>(_data_cpu);
 		}
 
 		// Begining pointer of CPU data
 		// = data_cpu()
-		_T *data_cpu_begin()
+		_T *begin_cpu()
 		{
 			return static_cast<_T *>(_data_cpu);
 		}
 
 		// Ending pointer of CPU data
 		// = data_cpu() + numel()
-		const _T *data_cpu_end() const
+		const _T *end_cpu() const
 		{
 			return static_cast<const _T *>(_data_cpu) + numel();
 		}
 
 		// Ending pointer of CPU data
 		// = data_cpu() + numel()
-		_T *data_cpu_end()
+		_T *end_cpu()
 		{
 			return static_cast<_T *>(_data_cpu) + numel();
 		}
@@ -215,28 +215,28 @@ namespace ssv
 
 		// Begining pitched_ptr of GPU data
 		// = data_gpu()
-		pitched_ptr<const _T> data_gpu_begin() const
+		pitched_ptr<const _T> begin_gpu() const
 		{
 			return pitched_ptr<const _T>(&_data_gpu);
 		}
 
 		// Begining pitched_ptr of GPU data
 		// = data_gpu()
-		pitched_ptr<_T> data_gpu_begin()
+		pitched_ptr<_T> begin_gpu()
 		{
 			return pitched_ptr<_T>(&_data_gpu);
 		}
 
 		// Ending pitched_ptr of GPU data
 		// = data_gpu() + numel()
-		pitched_ptr<const _T> data_gpu_end() const
+		pitched_ptr<const _T> end_gpu() const
 		{
 			return pitched_ptr<const _T>(&_data_gpu) + numel();
 		}
 
 		// Ending pitched_ptr of GPU data
 		// = data_gpu() + numel()
-		pitched_ptr<_T> data_gpu_end()
+		pitched_ptr<_T> end_gpu()
 		{
 			return pitched_ptr<_T>(&_data_gpu) + numel();
 		}

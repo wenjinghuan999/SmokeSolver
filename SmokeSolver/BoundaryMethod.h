@@ -27,6 +27,26 @@ namespace ssv
 		}
 	};
 
+	// Boundary operators
+	template <typename QType, typename TpType>
+	struct BoundaryOpClamp2
+	{
+		typedef QType first_argument_type;
+		typedef TpType second_argument_type;
+		typedef QType result_type;
+
+		QType q1;
+		TpType tp1;
+		QType q2;
+		TpType tp2;
+		__host__ __device__ QType operator() (
+			const QType &q, const TpType &tp
+			) const
+		{
+			return tp == tp1 ? q1 : tp == tp2 ? q2: q;
+		}
+	};
+
 	// Deal with boundary conditions
 	class BoundaryMethod
 	{
