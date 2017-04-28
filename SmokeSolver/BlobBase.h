@@ -33,12 +33,12 @@ namespace ssv
 		~BlobBase();
 
 	public:
-		// Copy Data to CPU
+		// Copy data to CPU
 		// from_gpu_data: cudaPitchedPtr from where data should be copied
 		//                [default] = nullptr: from GPU data of this Blob 
 		void copyToCpu(cudaPitchedPtr *from_gpu_data = nullptr);
 
-		// Copy Data to GPU
+		// Copy data to GPU
 		// from_cpu_data: pointer from where data should be copied
 		//                [default] = nullptr: from CPU data of this Blob 
 		void copyToGpu(void *from_cpu_data = nullptr);
@@ -46,6 +46,9 @@ namespace ssv
 		// Destroy the specific texture
 		// if texture_object == 0, destroy all textures
 		void destroyTexture(cudaTextureObject_t texture_object = 0);
+
+		// Set all memory to zero
+		void clear();
 
 	public:
 		// Return nx (in elements)

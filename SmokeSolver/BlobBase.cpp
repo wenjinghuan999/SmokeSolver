@@ -14,7 +14,7 @@ BlobBase::BlobBase(size_t nx_in_bytes, uint ny, uint nz,
 {
 	if (nx_in_bytes == 0 || ny == 0 || nz == 0)
 	{
-		throw SSV_ERROR_INVALID_VALUE;
+		throw error_t::SSV_ERROR_INVALID_VALUE;
 	}
 
 	_nx_in_bytes = nx_in_bytes;
@@ -26,8 +26,9 @@ BlobBase::BlobBase(size_t nx_in_bytes, uint ny, uint nz,
 		_data_cpu = new byte[_nx_in_bytes * _ny * _nz];
 		if (!_data_cpu)
 		{
-			throw SSV_ERROR_OUT_OF_MEMORY_CPU;
+			throw error_t::SSV_ERROR_OUT_OF_MEMORY_CPU;
 		}
+		memset(_data_cpu, 0, _nx_in_bytes * _ny * _nz);
 	}
 
 	_InitCuda(gpu_device);
@@ -44,7 +45,7 @@ BlobBase::BlobBase(const BlobBase &other)
 		_data_cpu = new byte[_nx_in_bytes * _ny * _nz];
 		if (!_data_cpu)
 		{
-			throw SSV_ERROR_OUT_OF_MEMORY_CPU;
+			throw error_t::SSV_ERROR_OUT_OF_MEMORY_CPU;
 		}
 		memcpy(_data_cpu, other._data_cpu, _nx_in_bytes * _ny * _nz);
 	}
@@ -71,7 +72,7 @@ BlobBase &BlobBase::operator= (const BlobBase &other)
 			_data_cpu = new byte[_nx_in_bytes * _ny * _nz];
 			if (!_data_cpu)
 			{
-				throw SSV_ERROR_OUT_OF_MEMORY_CPU;
+				throw error_t::SSV_ERROR_OUT_OF_MEMORY_CPU;
 			}
 			memcpy(_data_cpu, other._data_cpu, _nx_in_bytes * _ny * _nz);
 		}

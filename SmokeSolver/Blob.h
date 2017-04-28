@@ -45,7 +45,7 @@ namespace ssv
 			: BlobBase(std::get<0>(shape) * sizeof(_T), std::get<1>(shape), std::get<2>(shape),
 				gpu_device, cpu_copy) {}
 
-
+	public:
 		// Return cudaTextureObject of GPU data in 2D
 		// If no texture of specific parameters exists, a new texture object will be created.
 		// If the Blob is 3D, use layer_id to specify which layer should be sampled.
@@ -131,6 +131,32 @@ namespace ssv
 
 			_CopyToCudaArray();
 			return texture_object;
+		}
+
+	public:
+		// Set data in cube
+		void setDataCubeCpu(_T value, uint x0, uint x1, uint y0, uint y1, uint z0 = 0, uint z1 = 0)
+		{
+			uint _nx = nx();
+			if (x0 >= _nx || x1 >= _nx || x0 > x1
+				|| y0 >= _nx || y0 >= _ny || y0 > y1
+				|| z0 >= _nx || z0 >= _nz || z0 > z1)
+			{
+				throw error_t::SSV_ERROR_INVALID_VALUE;
+			}
+			_T *pa = data_cpu();
+			for (uint z = z0; z <= z1; z++)
+			{
+				_T *pz = pa + z * _ny * _nx;
+				for (uint y = y0; y <= y1; y++)
+				{
+					_T *p = pz + y * _nx + x0;
+					for (uint x = x0; x <= x1; x++)
+					{
+						*(p++) = value;
+					}
+				}
+			}
 		}
 
 	public:
