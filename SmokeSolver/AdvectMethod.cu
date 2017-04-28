@@ -46,17 +46,24 @@ namespace
 }
 
 template <typename QType>
-void AdvectMethodSemiLagrangian<QType>::operator () (
+void AdvectMethodSemiLagrangian::operator()<QType>(
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 	) const
 {
 	kernelAdvectMethodSemiLagrangian<<<q.ny(), q.nx()>>>(
 		qout.wrapper(), q.data_texture_2d(), u.wrapper_const()
-	);
+		);
 }
 
+template void AdvectMethodSemiLagrangian::operator()<T>(
+	Blob<T> &, const Blob<T> &, const Blob<T2> &) const;
+template void AdvectMethodSemiLagrangian::operator()<T2>(
+	Blob<T2> &, const Blob<T2> &, const Blob<T2> &) const;
+template void AdvectMethodSemiLagrangian::operator()<T4>(
+	Blob<T4> &, const Blob<T4> &, const Blob<T2> &) const;
+
 template <typename QType>
-void AdvectMethodSemiLagrangian<QType>::operator () (
+void AdvectMethodSemiLagrangian::operator()<QType>(
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 	) const
 {
@@ -65,6 +72,9 @@ void AdvectMethodSemiLagrangian<QType>::operator () (
 		);
 }
 
-template class AdvectMethodSemiLagrangian<T>;
-template class AdvectMethodSemiLagrangian<T2>;
-template class AdvectMethodSemiLagrangian<T4>;
+template void AdvectMethodSemiLagrangian::operator()<T>(
+	Blob<T> &, const Blob<T> &, const Blob<T4> &) const;
+template void AdvectMethodSemiLagrangian::operator()<T2>(
+	Blob<T2> &, const Blob<T2> &, const Blob<T4> &) const;
+template void AdvectMethodSemiLagrangian::operator()<T4>(
+	Blob<T4> &, const Blob<T4> &, const Blob<T4> &) const;

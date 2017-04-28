@@ -8,7 +8,7 @@ using thrust::placeholders::_1;
 using thrust::placeholders::_2;
 
 template <typename QType>
-void EulerMethodForward<QType>::operator() (
+void EulerMethodForward::operator()(
 	Blob<QType> &q, const Blob<QType> &d
 	) const
 {
@@ -18,6 +18,6 @@ void EulerMethodForward<QType>::operator() (
 	);
 }
 
-template class EulerMethodForward<T>;
-template class EulerMethodForward<T2>;
-template class EulerMethodForward<T4>;
+template void EulerMethodForward::operator()<T>(Blob<T> &, const Blob<T> &) const;
+template void EulerMethodForward::operator()<T2>(Blob<T2> &, const Blob<T2> &) const;
+template void EulerMethodForward::operator()<T4>(Blob<T4> &, const Blob<T4> &) const;

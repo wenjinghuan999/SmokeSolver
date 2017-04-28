@@ -7,16 +7,15 @@ using namespace ssv;
 #include <thrust/transform.h>
 
 
-template <typename TpType, typename QType>
-void BoundaryMethodClampAll<TpType, QType>::operator() (
-	const Blob<TpType> &tp, Blob<QType> &q
+template<typename QType, typename TpType, typename OpType>
+void BoundaryMethodAll<QType, TpType, OpType>::operator() (
+	Blob<QType> &q, const Blob<TpType> &tp
 	) const
 {
-	BoundaryOpClamp<TpType, QType> op(tp1, q1);
-	thrust::transform(tp.data_gpu_begin(), tp.data_gpu_end(),
-		q.data_gpu_begin(), q.data_gpu_begin(), op);
+	thrust::transform(q.data_gpu_begin(), q.data_gpu_end(),
+		tp.data_gpu_begin(), q.data_gpu_begin(), _op);
 }
 
-template class BoundaryMethodClampAll<byte, T>;
-template class BoundaryMethodClampAll<byte, T2>;
-template class BoundaryMethodClampAll<byte, T4>;
+template class BoundaryMethodAll<T, byte, BoundaryOpClamp<T, byte> >;
+template class BoundaryMethodAll<T2, byte, BoundaryOpClamp<T2, byte> >;
+template class BoundaryMethodAll<T4, byte, BoundaryOpClamp<T4, byte> >;

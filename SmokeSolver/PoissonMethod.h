@@ -13,48 +13,38 @@ namespace ssv
 	//  __2
 	//  \/ q = g
 	//
-	template <typename QType>
 	class PoissonMethod
 	{
 	public:
-		virtual void operator() (
-			Blob<QType> &q, const Blob<QType> &g
-			) const = 0;
+		template <typename QType>
+		using type = std::function<void(Blob<QType> &, const Blob<QType> &)>;
 	};
 
-	template <typename QType>
-	class PoissonMethodGS : public PoissonMethod<QType>
+	class PoissonMethodGS : public PoissonMethod
 	{
 	public:
 		PoissonMethodGS(ssv::uint iterations)
 			: _iterations(iterations) {}
-		virtual void operator() (
+		template <typename QType>
+		void operator() (
 			Blob<QType> &q, const Blob<QType> &g
-			) const override;
+			) const;
 	private:
 		ssv::uint _iterations;
 	};
 
-	template <typename QType>
-	class PoissonMethodVCycle : public PoissonMethod<QType>
+	class PoissonMethodVCycle : public PoissonMethod
 	{
 	public:
 		PoissonMethodVCycle(ssv::uint levels, ssv::uint iterations)
 			: _levels(levels), _gs(iterations) {}
-		virtual void operator() (
+		template <typename QType>
+		void operator() (
 			Blob<QType> &q, const Blob<QType> &g
-			) const override;
-	private:
-		static typename Blob<QType>::shape_t _NextShape(
-			const typename Blob<QType>::shape_t &shape);
-		static void _DownSample(Blob<QType> &qout, const Blob<QType> &qin);
-		static void _UpSample(Blob<QType> &qout, const Blob<QType> &qin);
-		void _VCycle(uint level) const;
+			) const;
 	private:
 		ssv::uint _levels;
-		PoissonMethodGS<QType> _gs;
-		mutable std::vector<Blob<QType> > _buffers_q;
-		mutable std::vector<Blob<QType> > _buffers_g;
+		PoissonMethodGS _gs;
 	};
 }
 

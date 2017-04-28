@@ -1,4 +1,5 @@
 
+#if 0
 #include "common.cuh"
 #include "Smoke2dSolver.h"
 using namespace ssv;
@@ -170,3 +171,4 @@ void Smoke2dSolver::_DestroyCuda()
 {
 
 }
+#endif

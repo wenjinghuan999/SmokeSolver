@@ -65,7 +65,7 @@ namespace
 }
 
 template<typename QType>
-void PoissonMethodGS<QType>::operator()(
+void PoissonMethodGS::operator()(
 	Blob<QType>& q, const Blob<QType>& g
 	) const
 {
@@ -95,9 +95,9 @@ void PoissonMethodGS<QType>::operator()(
 	}
 }
 
-template class PoissonMethodGS<T>;
-template class PoissonMethodGS<T2>;
-template class PoissonMethodGS<T4>;
+template void PoissonMethodGS::operator()(Blob<T>&, const Blob<T>&) const;
+template void PoissonMethodGS::operator()(Blob<T2>&, const Blob<T2>&) const;
+template void PoissonMethodGS::operator()(Blob<T4>&, const Blob<T4>&) const;
 
 namespace
 {
@@ -184,109 +184,114 @@ namespace
 		qout(2u * x + 1u,	2u * y,			2u * z + 1u) = q;
 		qout(2u * x,		2u * y,			2u * z + 1u) = q;
 	}
-}
 
-template <typename QType>
-typename Blob<QType>::shape_t PoissonMethodVCycle<QType>::_NextShape(
-	const typename Blob<QType>::shape_t &shape
-)
-{
-	uint nx, ny, nz;
-	std::tie(nx, ny, nz) = shape;
-	nx /= 2u; if (nx < 3u) nx = 3u;
-	ny /= 2u; if (ny < 3u) ny = 3u;
-	if (nz >= 3u)
+	typename BlobShape _NextShape(
+		const BlobShape &shape
+	)
 	{
-		nz = (nz + 1u) / 2u + 1u; if (nz < 3u) nz = 3u;
+		uint nx, ny, nz;
+		std::tie(nx, ny, nz) = shape;
+		nx /= 2u; if (nx < 3u) nx = 3u;
+		ny /= 2u; if (ny < 3u) ny = 3u;
+		if (nz >= 3u)
+		{
+			nz = (nz + 1u) / 2u + 1u; if (nz < 3u) nz = 3u;
+		}
+		return std::make_tuple(nx, ny, nz);
 	}
-	return std::make_tuple(nx, ny, nz);
-}
 
-template <typename QType>
-void PoissonMethodVCycle<QType>::_DownSample(
-	Blob<QType> &qout, const Blob<QType> &qin
-)
-{
-	assert(qout.shape() == _NextShape(qin.shape()));
-	if (qout.nz() == qin.nz())
+	template <typename QType>
+	void _DownSample(
+		Blob<QType> &qout, const Blob<QType> &qin
+	)
 	{
-		kernelDownSample2d<<<qout.ny(), qout.nx()>>>(
-			qout.wrapper(), qin.wrapper_const()
-		);
+		assert(qout.shape() == _NextShape(qin.shape()));
+		if (qout.nz() == qin.nz())
+		{
+			kernelDownSample2d<<<qout.ny(), qout.nx()>>>(
+				qout.wrapper(), qin.wrapper_const()
+			);
+		}
+		else
+		{
+			kernelDownSample3d<<<dim3(qout.ny(), qout.nz()), qout.nx()>>>(
+				qout.wrapper(), qin.wrapper_const()
+			);
+		}
 	}
-	else
-	{
-		kernelDownSample3d<<<dim3(qout.ny(), qout.nz()), qout.nx()>>>(
-			qout.wrapper(), qin.wrapper_const()
-		);
-	}
-}
 
-template <typename QType>
-void PoissonMethodVCycle<QType>::_UpSample(
-	Blob<QType> &qout, const Blob<QType> &qin
-)
-{
-	assert(qin.shape() == _NextShape(qout.shape()));
-	if (qout.nz() == qin.nz())
+	template <typename QType>
+	void _UpSample(
+		Blob<QType> &qout, const Blob<QType> &qin
+	)
 	{
-		kernelUpSample2d<<<qin.ny(), qin.nx()>>>(
-			qout.wrapper(), qin.wrapper_const()
-		);
+		assert(qin.shape() == _NextShape(qout.shape()));
+		if (qout.nz() == qin.nz())
+		{
+			kernelUpSample2d<<<qin.ny(), qin.nx()>>>(
+				qout.wrapper(), qin.wrapper_const()
+			);
+		}
+		else
+		{
+			kernelUpSample3d<<<dim3(qin.ny(), qin.nz()), qin.nx()>>>(
+				qout.wrapper(), qin.wrapper_const()
+			);
+		}
 	}
-	else
+	
+	template <typename QType>
+	void _VCycle(
+		std::vector<Blob<QType> > &buffers_q, std::vector<Blob<QType> > &buffers_g, 
+		const PoissonMethodGS &gs, uint level, uint levels
+	)
 	{
-		kernelUpSample3d<<<dim3(qin.ny(), qin.nz()), qin.nx()>>>(
-			qout.wrapper(), qin.wrapper_const()
-		);
+		if (level + 1u < levels)
+		{
+			_DownSample(buffers_q[level + 1u], buffers_q[level]);
+			_DownSample(buffers_g[level + 1u], buffers_g[level]);
+
+			_VCycle(buffers_q, buffers_g, gs, level + 1u, levels);
+
+			_UpSample(buffers_q[level], buffers_q[level + 1]);
+		}
+		gs(buffers_q[level], buffers_g[level]);
 	}
-}
-
-template <typename QType>
-void PoissonMethodVCycle<QType>::_VCycle(
-	uint level
-) const
-{
-	if (level + 1u < _levels)
-	{
-		_DownSample(_buffers_q[level + 1u], _buffers_q[level]);
-		_DownSample(_buffers_g[level + 1u], _buffers_g[level]);
-
-		_VCycle(level + 1u);
-
-		_UpSample(_buffers_q[level], _buffers_q[level + 1]);
-	}
-	_gs(_buffers_q[level], _buffers_g[level]);
 }
 
 template<typename QType>
-void PoissonMethodVCycle<QType>::operator()(Blob<QType>& q, const Blob<QType>& g) const
+void PoissonMethodVCycle::operator()(Blob<QType>& q, const Blob<QType>& g) const
 {
+	static std::vector<Blob<QType> > buffers_q;
+	static std::vector<Blob<QType> > buffers_g;
+
 	typename Blob<QType>::shape_t shape = q.shape();
 	shape = _NextShape(shape);
 
-	if (_buffers_q.empty() || _buffers_q.front().shape() != shape)
+	if (buffers_q.empty() || buffers_q.front().shape() != shape)
 	{
-		_buffers_q.clear();
-		_buffers_g.clear();
+		buffers_q.clear();
+		buffers_g.clear();
 		for (uint i = 0; i < _levels; i++)
 		{
-			_buffers_q.emplace_back(shape, q.gpu_device(), false);
-			_buffers_g.emplace_back(shape, q.gpu_device(), false);
+			buffers_q.emplace_back(shape, q.gpu_device(), false);
+			buffers_g.emplace_back(shape, q.gpu_device(), false);
 			shape = _NextShape(shape);
 		}
 	}
 
 	if (_levels > 0)
 	{
-		_DownSample(_buffers_q[0], q);
-		_DownSample(_buffers_g[0], g);
+		_DownSample(buffers_q[0], q);
+		_DownSample(buffers_g[0], g);
 
-		_VCycle(0);
+		_VCycle(buffers_q, buffers_g, _gs, 0, _levels);
 
-		_UpSample(q, _buffers_q[0]);
+		_UpSample(q, buffers_q[0]);
 	}
 	_gs(q, g);
 }
 
-template class PoissonMethodVCycle<T>;
+template void PoissonMethodVCycle::operator()<T>(Blob<T>& q, const Blob<T>& g) const;
+template void PoissonMethodVCycle::operator()<T2>(Blob<T2>& q, const Blob<T2>& g) const;
+template void PoissonMethodVCycle::operator()<T4>(Blob<T4>& q, const Blob<T4>& g) const;

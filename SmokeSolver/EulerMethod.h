@@ -13,22 +13,20 @@ namespace ssv
 	//  dq
 	// ---- = d
 	//  dt
-	template <typename QType>
 	class EulerMethod
 	{
 	public:
-		virtual void operator() (
-			Blob<QType> &q, const Blob<QType> &d
-			) const = 0;
+		template <typename QType>
+		using type = std::function<void(Blob<QType> &, const Blob<QType> &)>;
 	};
 
-	template <typename QType>
-	class EulerMethodForward : public EulerMethod<QType>
+	class EulerMethodForward : public EulerMethod
 	{
 	public:
-		virtual void operator() (
+		template <typename QType>
+		void operator()(
 			Blob<QType> &q, const Blob<QType> &d
-			) const override;
+			) const;
 	};
 }
 

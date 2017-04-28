@@ -95,7 +95,12 @@ int main()
 
 	Smoke2dSolver solver;
 	solver.setSize(5, 2);
-	solver.setAdvectMethod<AdvectMethodSemiLagrangian<T> >();
+	solver.setAdvectMethod(AdvectMethodSemiLagrangian());
+	solver.setEulerMethod(EulerMethodForward());
+	solver.setPoissonMethod(PoissonMethodVCycle(3, 7));
+	solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp<T, byte>{1, 0}));
+	solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp<T2, byte>{make_float2(1.f, 0.5f), 0}));
+	solver.setForceMethod(ForceMethodSimple(0.03f, 2.5f, 0.f));
 	solver.init();
 	solver.step();
 

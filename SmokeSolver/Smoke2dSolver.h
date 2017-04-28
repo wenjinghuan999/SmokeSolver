@@ -29,30 +29,38 @@ namespace ssv
 		{
 			_nx = nx; _ny = ny;
 		}
-		template<typename MethodType, typename ...ArgTypes>
-		void setAdvectMethod(ArgTypes ...args)
+		template<typename MethodType>
+		void setAdvectMethod(MethodType method)
 		{
-			_advect = std::make_unique<MethodType>(std::forward<ArgTypes>(args)...);
+			_advect = method;
+			_advect2 = method;
 		}
-		template<typename MethodType, typename ...ArgTypes>
-		void setEulerMethod(ArgTypes ...args)
+		template<typename MethodType>
+		void setEulerMethod(MethodType method)
 		{
-			_euler = std::make_unique<MethodType>(std::forward<ArgTypes>(args)...);
+			_euler = method;
+			_euler2 = method;
 		}
-		template<typename MethodType, typename ...ArgTypes>
-		void setPoissonMethod(ArgTypes ...args)
+		template<typename MethodType>
+		void setPoissonMethod(MethodType method)
 		{
-			_poisson = std::make_unique<MethodType>(std::forward<ArgTypes>(args)...);
+			_poisson = method;
+			_poisson2 = method;
 		}
-		template<typename MethodType, typename ...ArgTypes>
-		void setBoundaryMethod(ArgTypes ...args)
+		template<typename MethodType>
+		void setBoundaryMethod(MethodType method)
 		{
-			_boundary = std::make_unique<MethodType>(std::forward<ArgTypes>(args)...);
+			_boundary = method;
 		}
-		template<typename MethodType, typename ...ArgTypes>
-		void setForceMethod(ArgTypes ...args)
+		template<typename MethodType>
+		void setBoundary2Method(MethodType method)
 		{
-			_force = std::make_unique<MethodType>(std::forward<ArgTypes>(args)...);
+			_boundary2 = method;
+		}
+		template<typename MethodType>
+		void setForceMethod(MethodType method)
+		{
+			_force = method;
 		}
 
 	public:
@@ -67,11 +75,15 @@ namespace ssv
 	private:
 		uint _nx, _ny;
 		Blob<T> _data;
-		std::unique_ptr<AdvectMethod<T> > _advect;
-		std::unique_ptr<EulerMethod<T> > _euler;
-		std::unique_ptr<PoissonMethod<T> > _poisson;
-		std::unique_ptr<BoundaryMethod<T, byte> > _boundary;
-		std::unique_ptr<ForceMethod<T, T2> > _force;
+		AdvectMethod::type<T, T2> _advect;
+		AdvectMethod::type<T2, T2> _advect2;
+		EulerMethod::type<T> _euler;
+		EulerMethod::type<T2> _euler2;
+		PoissonMethod::type<T>  _poisson;
+		PoissonMethod::type<T2>  _poisson2;
+		BoundaryMethod::type<T, byte> _boundary;
+		BoundaryMethod::type<T2, byte> _boundary2;
+		ForceMethod::type<T2> _force;
 	};
 }
 

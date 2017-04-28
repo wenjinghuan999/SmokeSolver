@@ -9,67 +9,55 @@
 
 namespace ssv
 {
-	// Operator for boundary conditions
-	template<typename TpType, typename QType>
-	class BoundaryOp
+	// Boundary operators
+	template <typename QType, typename TpType>
+	struct BoundaryOpClamp
 	{
-	public:
-		typedef TpType first_argument_type;
-		typedef QType second_argument_type;
+		typedef QType first_argument_type;
+		typedef TpType second_argument_type;
 		typedef QType result_type;
-		// Apply boundary condition for a cell
-		// tp : cell type
-		// q  : current cell value
-		__host__ __device__ virtual QType operator() (
-			const TpType &tp, const QType &q
-			) const = 0;
-	};
 
-	// Clamp q to q1 for tp = tp1, ...
-	// q remains the same for other tp
-	template <typename TpType, typename QType>
-	class BoundaryOpClamp : public BoundaryOp<TpType, QType>
-	{
-	public:
-		BoundaryOpClamp(TpType tp1, QType q1)
-			: tp1(tp1), q1(q1) {}
-	public:
-		__host__ __device__ virtual QType operator() (
-			const TpType &tp, const QType &q
+		QType q1;
+		TpType tp1;
+		__host__ __device__ QType operator() (
+			const QType &q, const TpType &tp
 			) const
 		{
-			return tp == tp1 ? q1 : q; 
+			return tp == tp1 ? q1 : q;
 		}
-	private:
-		TpType tp1;
-		QType q1;
 	};
 
 	// Deal with boundary conditions
-	template <typename TpType, typename QType>
 	class BoundaryMethod
 	{
 	public:
-		virtual void operator () (
-			const Blob<TpType> &tp, Blob<QType> &q
-			) const = 0;
+		template<typename QType, typename TpType>
+		using type = std::function<void(Blob<QType> &, const Blob<TpType> &)>;
 	};
 
 	// Apply the same boundary operator for all cells
-	template <typename TpType, typename QType>
-	class BoundaryMethodClampAll : public BoundaryMethod<TpType, QType>
+	// op : boundary operator
+	template<typename QType, typename TpType, typename OpType>
+	class BoundaryMethodAll : public BoundaryMethod
 	{
 	public:
-		BoundaryMethodClampAll(TpType tp1, QType q1)
-			: tp1(tp1), q1(q1) {}
+		BoundaryMethodAll(OpType &&op)
+			: _op(std::forward<OpType>(op)) {}
 	public:
-		virtual void operator () (
-			const Blob<TpType> &tp, Blob<QType> &q
+		void operator()(
+			Blob<QType> &q, const Blob<TpType> &tp
 			) const;
 	private:
-		TpType tp1;
-		QType q1;
+		OpType _op;
 	};
+
+	template<typename OpType, 
+		typename QType = OpType::first_argument_type, 
+		typename TpType = OpType::second_argument_type>
+	inline BoundaryMethodAll<QType, TpType, OpType> make_boundary_method_all(OpType &&op)
+	{
+		return BoundaryMethodAll<QType, TpType, OpType>(std::forward<OpType>(op));
+	}
 }
 
 #endif // !__BOUNDARY_METHOD_H__

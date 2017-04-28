@@ -10,6 +10,21 @@
 #include <iostream>
 #include <algorithm>
 
+namespace std
+{
+	std::ostream &operator<< (std::ostream &out, float2 q)
+	{
+		out << "(" << q.x << "," << q.y << ")";
+		return out;
+	}
+
+	std::ostream &operator<< (std::ostream &out, float4 q)
+	{
+		out << "(" << q.x << "," << q.y << "," << q.z << "," << q.w << ")";
+		return out;
+	}
+}
+
 namespace ssv
 {
 	namespace output

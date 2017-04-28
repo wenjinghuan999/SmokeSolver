@@ -6,6 +6,8 @@
 #include "common.h"
 #include "Blob.h"
 
+#include <functional>
+
 
 namespace ssv
 {
@@ -13,32 +15,26 @@ namespace ssv
 	//  dq          __
 	// ---- = -(u . \/) q
 	//  dt
-	template <typename QType>
 	class AdvectMethod
 	{
 	public:
-		// 2D
-		virtual void operator() (
-			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
-			) const = 0;
-		// 3D
-		virtual void operator() (
-			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
-			) const = 0;
+		template <typename QType, typename UType>
+		using type = std::function<void(Blob<QType> &, const Blob<QType> &, const Blob<UType> &)>;
 	};
 
-	template <typename QType>
-	class AdvectMethodSemiLagrangian : public AdvectMethod<QType>
+	class AdvectMethodSemiLagrangian : public AdvectMethod
 	{
 	public:
 		// 2D
-		virtual void operator() (
+		template <typename QType>
+		void operator()(
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
-			) const override;
+			) const;
 		// 3D
-		virtual void operator() (
+		template <typename QType>
+		void operator()(
 			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
-			) const override;
+			) const;
 	};
 }
 

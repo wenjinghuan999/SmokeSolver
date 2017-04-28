@@ -7,46 +7,46 @@ using namespace ssv;
 
 namespace
 {
-	template<typename QType, typename FType>
+	template<typename FType>
 	struct simple_buoyancy;
 
-	template<typename QType>
-	struct simple_buoyancy<QType, T2>
+	template<>
+	struct simple_buoyancy<T2>
 	{
-		typedef QType argument_type;
+		typedef T argument_type;
 		typedef T2 result_type;
-		QType alpha, beta, tm0;
+		T alpha, beta, tm0;
 		__host__ __device__ const T2 operator() (
-			const QType &rh, const QType &tm) const
+			const T &rh, const T &tm) const
 		{
 			return make_float2(0, -alpha * rh + beta * (tm - tm0));
 		}
 	};
-	template<typename QType>
-	struct simple_buoyancy<QType, T4>
+	template<>
+	struct simple_buoyancy<T4>
 	{
-		typedef QType argument_type;
+		typedef T argument_type;
 		typedef T4 result_type;
-		QType alpha, beta, tm0;
+		T alpha, beta, tm0;
 		__host__ __device__ const T4 operator() (
-			const QType &rh, const QType &tm) const
+			const T &rh, const T &tm) const
 		{
 			return make_float4(0, 0, -alpha * rh + beta * (tm - tm0), 0);
 		}
 	};
 }
 
-template<typename QType, typename FType>
-void ForceMethodSimple<QType, FType>::operator()(
-	Blob<FType>& fout, const Blob<QType>& rh, const Blob<QType>& tm
+template<typename FType>
+void ForceMethodSimple::operator()<FType>(
+	Blob<FType>& fout, const Blob<T>& rh, const Blob<T>& tm
 	) const
 {
-	T alpha = 0.03f, beta = 2.5f, tm0 = 0.f;
-
 	thrust::transform(rh.data_gpu_begin(), rh.data_gpu_end(),
 		tm.data_gpu_begin(), fout.data_gpu_begin(),
-		simple_buoyancy<QType, FType>{alpha, beta, tm0});
+		simple_buoyancy<FType>{_alpha, _beta, _tm0});
 }
 
-template class ForceMethodSimple<T, T2>;
-template class ForceMethodSimple<T, T4>;
+template void ForceMethodSimple::operator()<T2>(
+	Blob<T2>& fout, const Blob<T>& rh, const Blob<T>& tm) const;
+template void ForceMethodSimple::operator()<T4>(
+	Blob<T4>& fout, const Blob<T>& rh, const Blob<T>& tm) const;

@@ -10,23 +10,26 @@
 namespace ssv
 {
 	// Calculate force
-	template <typename QType, typename FType>
 	class ForceMethod
 	{
 	public:
-		// Calculate force according to density(rh) and temperature(tm)
-		virtual void operator() (
-			Blob<FType> &fout, const Blob<QType> &rh, const Blob<QType> &tm
-			) const = 0;
+		template <typename FType>
+		using type = std::function<void(Blob<FType> &, const Blob<T> &, const Blob<T> &)>;
 	};
 
-	template <typename QType, typename FType>
-	class ForceMethodSimple : public ForceMethod<QType, FType>
+	// Calculate force according to density(rh) and temperature(tm)
+	class ForceMethodSimple : public ForceMethod
 	{
 	public:
-		virtual void operator() (
-			Blob<FType> &fout, const Blob<QType> &rh, const Blob<QType> &tm
-			) const override;
+		ForceMethodSimple(T alpha, T beta, T tm0)
+			: _alpha(alpha), _beta(beta), _tm0(tm0) {}
+	public:
+		template <typename FType>
+		void operator() (
+			Blob<FType> &fout, const Blob<T> &rh, const Blob<T> &tm
+			) const;
+	private:
+		T _alpha, _beta, _tm0;
 	};
 }
 

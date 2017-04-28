@@ -5,6 +5,7 @@
 
 #include "common.cuh"
 #include "Blob.h"
+#include "debug_output.h"
 #include <iostream>
 
 namespace ssv
