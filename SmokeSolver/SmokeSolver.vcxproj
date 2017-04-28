@@ -101,6 +101,7 @@
     <ClInclude Include="AdvectMethod.h" />
     <ClInclude Include="Blob.h" />
     <ClInclude Include="BlobBase.h" />
+    <ClInclude Include="BlobMath.h" />
     <ClInclude Include="BoundaryMethod.h" />
     <ClInclude Include="debug_output.cuh" />
     <ClInclude Include="debug_output.h" />
@@ -115,7 +116,6 @@
     <ClInclude Include="Smoke2d.pb.h" />
     <ClInclude Include="Smoke2dSolver.h" />
     <ClInclude Include="SmokeSolver.h" />
-    <ClInclude Include="unary_ops.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="AdvectMethod.cu" />
@@ -123,6 +123,7 @@
       <AdditionalDeps Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </AdditionalDeps>
     </CudaCompile>
+    <CudaCompile Include="BlobMath.cu" />
     <CudaCompile Include="BoundaryMethod.cu" />
     <CudaCompile Include="EulerMethod.cu" />
     <CudaCompile Include="ForceMethod.cu" />

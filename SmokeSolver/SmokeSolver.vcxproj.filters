@@ -46,6 +46,9 @@
     <Filter Include="Methods\PoissonMethod">
       <UniqueIdentifier>{b0a16fb2-d2ac-457c-a513-25f06eac329b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BlobMath">
+      <UniqueIdentifier>{30f58596-cfeb-4d74-8264-c30525505051}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -107,9 +110,6 @@
     <ClInclude Include="BoundaryMethod.h">
       <Filter>Methods\BoundaryMethod</Filter>
     </ClInclude>
-    <ClInclude Include="unary_ops.cuh">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="debug_output.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -124,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="PoissonMethod.h">
       <Filter>Methods\PoissonMethod</Filter>
+    </ClInclude>
+    <ClInclude Include="BlobMath.h">
+      <Filter>BlobMath</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +147,9 @@
     </CudaCompile>
     <CudaCompile Include="PoissonMethod.cu">
       <Filter>Methods\PoissonMethod</Filter>
+    </CudaCompile>
+    <CudaCompile Include="BlobMath.cu">
+      <Filter>BlobMath</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
