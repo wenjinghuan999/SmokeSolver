@@ -14,39 +14,39 @@ namespace ssv
 	{
 
 		template <typename _T>
-		void PrintRawGPU(_T *a_dev, size_t length = 1u, std::string tag = "data")
+		void PrintRawGPU(_T *a_dev, size_t length = 1u, std::string tag = "data", std::ostream &out = std::cout)
 		{
 			if (a_dev == nullptr)
 			{
-				std::cout << tag << " = nullptr" << std::endl;
+				out << tag << " = nullptr" << std::endl;
 				return;
 			}
 
 			_T *a = new _T[length];
 			cudaMemcpy(a, a_dev, length * sizeof(_T), cudaMemcpyDeviceToHost);
 
-			std::cout << tag << ": ";
+			out << tag << ": ";
 			for (unsigned int i = 0u; i < length; i++)
 			{
-				std::cout << a[i] << " ";
+				out << a[i] << " ";
 			}
-			std::cout << std::endl;
+			out << std::endl;
 			delete[] a;
 		}
 
 		template <typename _T>
-		void PrintBlobGPU(const ssv::Blob<_T> &b, std::string tag = "data")
+		void PrintBlobGPU(const ssv::Blob<_T> &b, std::string tag = "data", std::ostream &out = std::cout)
 		{
 			for (uint z = 0; z < b.nz(); z++)
 			{
-				std::cout << tag << "<GPU>(:,:," << z << "):\n";
+				out << tag << "<GPU>(:,:," << z << "):\n";
 				for (uint y = 0; y < b.ny(); y++)
 				{
 					thrust::copy(b.data_gpu() + z * b.ny() * b.nx() + y * b.nx(),
-						b.data_gpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(std::cout, " "));
-					std::cout << std::endl;
+						b.data_gpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(out, " "));
+					out << std::endl;
 				}
-				std::cout << std::endl;
+				out << std::endl;
 			}
 		}
 	}

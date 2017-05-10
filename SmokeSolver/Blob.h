@@ -28,6 +28,7 @@ namespace ssv
 		typedef BlobBase::shape_t shape_t;
 		typedef BlobWrapper<_T> wrapper_t;
 		typedef BlobWrapperConst<_T> wrapper_const_t;
+		typedef BlobBase::storage_t storage_t;
 
 	public:
 		Blob() : BlobBase() {}
@@ -35,17 +36,35 @@ namespace ssv
 		// nx, ny, nz: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
-		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, bool cpu_copy = true)
-			: BlobBase(nx * sizeof(_T), ny, nz, gpu_device, cpu_copy) {}
+		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, storage_t storage = storage_t::Both)
+			: BlobBase(nx * sizeof(_T), ny, nz, gpu_device, storage) {}
 
 		// shape: size in elements
 		// gpu_device: cuda device id
 		// cpu_copy: if true, copying from and to CPU is enabled
-		Blob(std::tuple<uint, uint, uint> shape, int gpu_device = 0, bool cpu_copy = true)
+		Blob(std::tuple<uint, uint, uint> shape, int gpu_device = 0, storage_t storage = storage_t::Both)
 			: BlobBase(std::get<0>(shape) * sizeof(_T), std::get<1>(shape), std::get<2>(shape),
-				gpu_device, cpu_copy) {}
+				gpu_device, storage) {}
 
 	public:
+		// Copy data to some buffer
+		// dst:  destination
+		// from: from CPU/GPU data of this Blob
+		// to:   to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
+		void copyTo(_T *dst, storage_t from, storage_t to) const
+		{
+			BlobBase::copyTo(static_cast<void *>(dst), from, to);
+		}
+
+		// Copy data from some buffer
+		// src:  source
+		// from: from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
+		// to:   to CPU/GPU/Both data of this Blob
+		void copyFrom(_T *src, storage_t from, storage_t to)
+		{
+			BlobBase::copyFrom(static_cast<void *>(src), from, to);
+		}
+
 		// Return cudaTextureObject of GPU data in 2D
 		// If no texture of specific parameters exists, a new texture object will be created.
 		// If the Blob is 3D, use layer_id to specify which layer should be sampled.

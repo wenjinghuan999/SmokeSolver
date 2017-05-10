@@ -52,7 +52,6 @@ namespace ssv
 		void setPoissonMethod(MethodType method)
 		{
 			_poisson = method;
-			_poisson2 = method;
 		}
 		template<typename MethodType>
 		void setBoundaryMethod(MethodType method)
@@ -71,6 +70,8 @@ namespace ssv
 		}
 
 		void addSource(uint x0, uint y0, uint x1, uint y1);
+
+		void *getData(size_t *size = nullptr);
 	public:
 		virtual void init();
 		virtual void step();
@@ -83,7 +84,6 @@ namespace ssv
 		EulerMethod::type<T> _euler;
 		EulerMethod::type<T2> _euler2;
 		PoissonMethod::type<T>  _poisson;
-		PoissonMethod::type<T2>  _poisson2;
 		BoundaryMethod::type<T, byte> _boundary;
 		BoundaryMethod::type<T2, byte> _boundary2;
 		ForceMethod::type<T2> _force;
@@ -93,7 +93,7 @@ namespace ssv
 		Blob<T> _tm[2];
 		Blob<T2> _u;
 		Blob<T2> _f;
-		Blob<T> _temp;
+		Blob<T> _temp1a, _temp1b;
 		Blob<T2> _temp2a, _temp2b;
 		int ping;
 	};

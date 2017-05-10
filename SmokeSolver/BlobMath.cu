@@ -16,9 +16,41 @@ void ssv::add(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2)
 	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), qout.begin_gpu(), _1 + _2);
 }
 
+template <typename _T>
+void ssv::add(Blob<_T> &qout, const Blob<_T> &q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), qout.begin_gpu(), _1 + v);
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator+=(Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), q1.begin_gpu(), _1 + _2);
+	return q1;
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator+=(Blob<_T>& q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q1.begin_gpu(), _1 + v);
+	return q1;
+}
+
 template void ssv::add<T>(Blob<T> &, const Blob<T> &, const Blob<T> &);
 template void ssv::add<T2>(Blob<T2> &, const Blob<T2> &, const Blob<T2> &);
 template void ssv::add<T4>(Blob<T4> &, const Blob<T4> &, const Blob<T4> &);
+
+template void ssv::add<T>(Blob<T> &, const Blob<T> &, T);
+template void ssv::add<T2>(Blob<T2> &, const Blob<T2> &, T2);
+template void ssv::add<T4>(Blob<T4> &, const Blob<T4> &, T4);
+
+template Blob<T> &ssv::operator+=<T>(Blob<T> &, const Blob<T> &);
+template Blob<T2> &ssv::operator+=<T2>(Blob<T2> &, const Blob<T2> &);
+template Blob<T4> &ssv::operator+=<T4>(Blob<T4> &, const Blob<T4> &);
+
+template Blob<T> &ssv::operator+=<T>(Blob<T> &, T);
+template Blob<T2> &ssv::operator+=<T2>(Blob<T2> &, T2);
+template Blob<T4> &ssv::operator+=<T4>(Blob<T4> &, T4);
 
 // Element-wise sub
 template <typename _T>
@@ -27,9 +59,126 @@ void ssv::sub(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2)
 	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), qout.begin_gpu(), _1 - _2);
 }
 
+template <typename _T>
+void ssv::sub(Blob<_T> &qout, const Blob<_T> &q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), qout.begin_gpu(), _1 - v);
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator-=(Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), q1.begin_gpu(), _1 - _2);
+	return q1;
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator-=(Blob<_T>& q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q1.begin_gpu(), _1 - v);
+	return q1;
+}
+
 template void ssv::sub<T>(Blob<T> &, const Blob<T> &, const Blob<T> &);
 template void ssv::sub<T2>(Blob<T2> &, const Blob<T2> &, const Blob<T2> &);
 template void ssv::sub<T4>(Blob<T4> &, const Blob<T4> &, const Blob<T4> &);
+
+template void ssv::sub<T>(Blob<T> &, const Blob<T> &, T);
+template void ssv::sub<T2>(Blob<T2> &, const Blob<T2> &, T2);
+template void ssv::sub<T4>(Blob<T4> &, const Blob<T4> &, T4);
+
+template Blob<T> &ssv::operator-=<T>(Blob<T> &, const Blob<T> &);
+template Blob<T2> &ssv::operator-=<T2>(Blob<T2> &, const Blob<T2> &);
+template Blob<T4> &ssv::operator-=<T4>(Blob<T4> &, const Blob<T4> &);
+
+template Blob<T> &ssv::operator-=<T>(Blob<T> &, T);
+template Blob<T2> &ssv::operator-=<T2>(Blob<T2> &, T2);
+template Blob<T4> &ssv::operator-=<T4>(Blob<T4> &, T4);
+
+template<typename _T>
+void ssv::mul(Blob<_T>& qout, const Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), qout.begin_gpu(), _1 * _2);
+}
+
+template <typename _T>
+void ssv::mul(Blob<_T> &qout, const Blob<_T> &q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), qout.begin_gpu(), _1 * v);
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator*=(Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), q1.begin_gpu(), _1 * _2);
+	return q1;
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator*=(Blob<_T>& q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q1.begin_gpu(), _1 * v);
+	return q1;
+}
+
+template void ssv::mul<T>(Blob<T> &, const Blob<T> &, const Blob<T> &);
+template void ssv::mul<T2>(Blob<T2> &, const Blob<T2> &, const Blob<T2> &);
+template void ssv::mul<T4>(Blob<T4> &, const Blob<T4> &, const Blob<T4> &);
+
+template void ssv::mul<T>(Blob<T> &, const Blob<T> &, T);
+template void ssv::mul<T2>(Blob<T2> &, const Blob<T2> &, T2);
+template void ssv::mul<T4>(Blob<T4> &, const Blob<T4> &, T4);
+
+template Blob<T> &ssv::operator*=<T>(Blob<T> &, const Blob<T> &);
+template Blob<T2> &ssv::operator*=<T2>(Blob<T2> &, const Blob<T2> &);
+template Blob<T4> &ssv::operator*=<T4>(Blob<T4> &, const Blob<T4> &);
+
+template Blob<T> &ssv::operator*=<T>(Blob<T> &, T);
+template Blob<T2> &ssv::operator*=<T2>(Blob<T2> &, T2);
+template Blob<T4> &ssv::operator*=<T4>(Blob<T4> &, T4);
+
+template<typename _T>
+void ssv::div(Blob<_T>& qout, const Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), qout.begin_gpu(), _1 / _2);
+}
+
+template <typename _T>
+void ssv::div(Blob<_T> &qout, const Blob<_T> &q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), qout.begin_gpu(), _1 / v);
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator/=(Blob<_T>& q1, const Blob<_T>& q2)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q2.begin_gpu(), q1.begin_gpu(), _1 / _2);
+	return q1;
+}
+
+template<typename _T>
+Blob<_T> &ssv::operator/=(Blob<_T>& q1, _T v)
+{
+	thrust::transform(q1.begin_gpu(), q1.end_gpu(), q1.begin_gpu(), _1 / v);
+	return q1;
+}
+
+template void ssv::div<T>(Blob<T> &, const Blob<T> &, const Blob<T> &);
+template void ssv::div<T2>(Blob<T2> &, const Blob<T2> &, const Blob<T2> &);
+template void ssv::div<T4>(Blob<T4> &, const Blob<T4> &, const Blob<T4> &);
+
+template void ssv::div<T>(Blob<T> &, const Blob<T> &, T);
+template void ssv::div<T2>(Blob<T2> &, const Blob<T2> &, T2);
+template void ssv::div<T4>(Blob<T4> &, const Blob<T4> &, T4);
+
+template Blob<T> &ssv::operator/=<T>(Blob<T> &, const Blob<T> &);
+template Blob<T2> &ssv::operator/=<T2>(Blob<T2> &, const Blob<T2> &);
+template Blob<T4> &ssv::operator/=<T4>(Blob<T4> &, const Blob<T4> &);
+
+template Blob<T> &ssv::operator/=<T>(Blob<T> &, T);
+template Blob<T2> &ssv::operator/=<T2>(Blob<T2> &, T2);
+template Blob<T4> &ssv::operator/=<T4>(Blob<T4> &, T4);
+
 
 namespace
 {
@@ -288,7 +437,7 @@ namespace
 		uint y = blockIdx.x + 1u;
 		uint x = threadIdx.x + 1u;
 
-		d(x, y) = (q(x - 1u, y) + q(x + 1u, y) + q(x, y - 1u) + q(x, y + 1u)) / (T)(4);
+		d(x, y) = q(x - 1u, y) + q(x + 1u, y) + q(x, y - 1u) + q(x, y + 1u) - (T)(4) * q(x, y);
 	}
 
 	// Simple Laplacian 3D
@@ -304,8 +453,9 @@ namespace
 		uint y = blockIdx.x + 1u;
 		uint x = threadIdx.x + 1u;
 
-		d(x, y, z) = (q(x - 1u, y, z) + q(x + 1u, y, z) + q(x, y - 1u, z) 
-			+ q(x, y + 1u, z) + q(x, y, z - 1u) + q(x, y, z + 1u)) / (T)(6);
+		d(x, y, z) = q(x - 1u, y, z) + q(x + 1u, y, z) + q(x, y - 1u, z) 
+			+ q(x, y + 1u, z) + q(x, y, z - 1u) + q(x, y, z + 1u)
+			- (T)(6) * q(x, y, z);
 	}
 }
 

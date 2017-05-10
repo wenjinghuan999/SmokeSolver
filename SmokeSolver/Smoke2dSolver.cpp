@@ -4,6 +4,9 @@
 #include "debug_output.h"
 using namespace ssv;
 
+#include <fstream>
+#include <sstream>
+
 
 void Smoke2dSolver::init()
 {
@@ -19,7 +22,8 @@ void Smoke2dSolver::init()
 	_tm[1] = Blob<T>(_nx, _ny);
 	_u = Blob<T2>(_nx, _ny);
 	_f = Blob<T2>(_nx, _ny);
-	_temp = Blob<T>(_nx, _ny);
+	_temp1a = Blob<T>(_nx, _ny);
+	_temp1b = Blob<T>(_nx, _ny);
 	_temp2a = Blob<T2>(_nx, _ny);
 	_temp2b = Blob<T2>(_nx, _ny);
 
@@ -27,7 +31,7 @@ void Smoke2dSolver::init()
 	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), _nx - 1u, _nx - 1u, 0, _ny - 1u);
 	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), 0, _nx - 1u, 0, 0);
 	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), 0, _nx - 1u, _ny - 1u, _ny - 1u);
-	_tp.copyToGpu();
+	_tp.syncCpu2Gpu();
 
 	ping = 0;
 }
@@ -35,7 +39,17 @@ void Smoke2dSolver::init()
 void ssv::Smoke2dSolver::addSource(uint x0, uint x1, uint y0, uint y1)
 {
 	_tp.setDataCubeCpu(underlying(CellType::CellTypeSource), x0, x1, y0, y1);
-	_tp.copyToGpu();
+	_tp.syncCpu2Gpu();
+}
+
+void *Smoke2dSolver::getData(size_t *size)
+{
+	if (size != nullptr)
+	{
+		*size = _rh[ping].size_cpu_in_bytes();
+	}
+	_rh[ping].syncGpu2Cpu();
+	return _rh[ping].data_cpu();
 }
 
 void Smoke2dSolver::step()
@@ -45,46 +59,54 @@ void Smoke2dSolver::step()
 	Blob<T> &tm = _tm[ping], &tm2 = _tm[ping ^ 1];
 	Blob<T2> &u = _u;
 	Blob<T2> &f= _f;
-	Blob<T> &temp = _temp;
+	Blob<T> &temp1 = _temp1a, &temp2 = _temp1b;
 	Blob<T2> &u1 = _temp2a, &u2 = _temp2b;
 
-	//tp.copyToCpu(); output::PrintBlobCPU(tp, "tp");
+	//tp.syncGpu2Cpu(); output::PrintBlobCPU(tp, "tp");
 
 	_boundary(rh, tp);
 	_boundary(tm, tp);
 	_boundary2(u, tp);
 
-	rh.copyToCpu(); output::PrintBlobCPU(rh, "rh");
-	//u.copyToCpu(); output::PrintBlobCPU(u, "u");
+	//static int frame_no = 0;
+	//std::stringstream ss;
+	//ss << "data/" << frame_no << ".txt";
+	//std::ofstream fout(ss.str());
+	//frame_no++;
+	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
 	_force(f, rh, tm);
 
-	//f.copyToCpu(); output::PrintBlobCPU(f, "f");
+	//f.syncGpu2Cpu(); output::PrintBlobCPU(f, "f");
 
 	_euler2(u, f);
 
-	//u.copyToCpu(); output::PrintBlobCPU(u, "u");
+	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
 	laplacian2d(u1, u);
+	u1 *= make_float2(0.1f, 0.1f);
 	_euler2(u, u1);
 
-	//u.copyToCpu(); output::PrintBlobCPU(u, "u");
+	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
 	_advect(rh2, rh, u);
 	_advect(tm2, tm, u);
 	_advect2(u1, u, u);
 
-	//rh2.copyToCpu(); output::PrintBlobCPU(rh2, "rh");
-	//tm2.copyToCpu(); output::PrintBlobCPU(tm2, "tm");
-	//u1.copyToCpu(); output::PrintBlobCPU(u1, "u1");
+	//rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
+	//tm2.syncGpu2Cpu(); output::PrintBlobCPU(tm2, "tm");
+	//u1.syncGpu2Cpu(); output::PrintBlobCPU(u1, "u1");
 
-	divergence(temp, u1);
-	_poisson(temp, temp);
-	gradient(u2, temp);
+	divergence(temp1, u1);
+	_poisson(temp2, temp1);
+	gradient(u2, temp2);
 
 	sub(u, u1, u2);
 
-	//u.copyToCpu(); output::PrintBlobCPU(u, "u");
+	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
+
+	std::cout << "rh size = " << rh2.size_cpu_in_bytes() << std::endl;
+	rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
 
 	ping ^= 1;
 }

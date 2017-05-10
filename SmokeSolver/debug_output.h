@@ -12,13 +12,19 @@
 
 namespace std
 {
-	std::ostream &operator<< (std::ostream &out, float2 q)
+	template<class _Elem,
+		class _Traits>
+	std::basic_ostream<_Elem, _Traits> &
+		operator<< (std::basic_ostream<_Elem, _Traits> &out, float2 q)
 	{
 		out << "(" << q.x << "," << q.y << ")";
 		return out;
 	}
 
-	std::ostream &operator<< (std::ostream &out, float4 q)
+	template<class _Elem,
+		class _Traits>
+		std::basic_ostream<_Elem, _Traits> &
+		operator<< (std::basic_ostream<_Elem, _Traits> &out, float4 q)
 	{
 		out << "(" << q.x << "," << q.y << "," << q.z << "," << q.w << ")";
 		return out;
@@ -30,20 +36,20 @@ namespace ssv
 	namespace output
 	{
 		template <typename _T>
-		void PrintRawCPU(_T *a, size_t length = 1u, std::string tag = "data")
+		void PrintRawCPU(_T *a, size_t length = 1u, std::string tag = "data", std::ostream &out = std::cout)
 		{
 			if (a == nullptr)
 			{
-				std::cout << tag << " = nullptr" << std::endl;
+				out << tag << " = nullptr" << std::endl;
 				return;
 			}
 
-			std::cout << tag << ": ";
+			out << tag << ": ";
 			for (unsigned int i = 0u; i < length; i++)
 			{
-				std::cout << a[i] << " ";
+				out << a[i] << " ";
 			}
-			std::cout << std::endl;
+			out << std::endl;
 			delete[] a;
 		}
 
@@ -51,18 +57,18 @@ namespace ssv
 		class Blob;
 
 		template <typename _T>
-		void PrintBlobCPU(const ssv::Blob<_T> &b, std::string tag = "data")
+		void PrintBlobCPU(const ssv::Blob<_T> &b, std::string tag = "data", std::ostream &out = std::cout)
 		{
 			for (uint z = 0; z < b.nz(); z++)
 			{
-				std::cout << tag << "<CPU>(:,:," << z << "):\n";
+				out << tag << "<CPU>(:,:," << z << "):\n";
 				for (uint y = 0; y < b.ny(); y++)
 				{
 					std::copy(b.data_cpu() + z * b.ny() * b.nx() + y * b.nx(),
-						b.data_cpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(std::cout, " "));
-					std::cout << std::endl;
+						b.data_cpu() + z * b.ny() * b.nx() + (y + 1u) * b.nx(), std::ostream_iterator<_T>(out, " "));
+					out << std::endl;
 				}
-				std::cout << std::endl;
+				out << std::endl;
 			}
 		}
 	}

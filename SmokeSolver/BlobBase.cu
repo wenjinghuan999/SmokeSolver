@@ -1,48 +1,146 @@
 
 #include "common.cuh"
+#include "pitched_ptr.h"
 #include "BlobBase.h"
 using namespace ssv;
 
+#include "thrust/copy.h"
 
-void BlobBase::copyToCpu(cudaPitchedPtr *from_gpu_data)
+
+void BlobBase::syncGpu2Cpu()
 {
 	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
 	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
 		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (_data_cpu == nullptr) return;
 
-	if (from_gpu_data == nullptr)
+	copyTo(_data_cpu, storage_t::GPU, storage_t::CPU);
+}
+
+void BlobBase::syncCpu2Gpu()
+{
+	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
+	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
+		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (_data_cpu == nullptr) return;
+
+	copyFrom(_data_cpu, storage_t::CPU, storage_t::GPU);
+}
+
+namespace
+{
+	inline enum cudaMemcpyKind make_cudaMemcpyKind(
+		BlobBase::storage_t from, BlobBase::storage_t to
+	)
 	{
-		from_gpu_data = &_data_gpu;
+		if (from == BlobBase::storage_t::CPU)
+		{
+			if (to == BlobBase::storage_t::CPU)
+				return cudaMemcpyHostToHost;
+			else
+				return cudaMemcpyHostToDevice;
+		}
+		else
+		{
+			if (to == BlobBase::storage_t::CPU)
+				return cudaMemcpyDeviceToHost;
+			else
+				return cudaMemcpyDeviceToDevice;
+		}
 	}
+}
+
+void BlobBase::copyTo(void *dst, storage_t from, storage_t to) const
+{
+	if ((from != storage_t::CPU && from != storage_t::GPU)
+		|| (to != storage_t::CPU && to != storage_t::GPU)
+		|| dst == nullptr)
+	{
+		throw error_t::SSV_ERROR_INVALID_VALUE;
+	}
+
+	cudaPitchedPtr dst_pitched_ptr =
+		make_cudaPitchedPtr(dst, _nx_in_bytes, _nx_in_bytes, _ny);
 	cudaPitchedPtr data_cpu_pitched_ptr =
 		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
 	cudaMemcpy3DParms params = { 0 };
-	params.srcPtr = *from_gpu_data;
-	params.dstPtr = data_cpu_pitched_ptr;
-	params.kind = cudaMemcpyDeviceToHost;
+	if (from == storage_t::CPU)
+		params.srcPtr = data_cpu_pitched_ptr;
+	else
+		params.srcPtr = _data_gpu;
+	params.dstPtr = dst_pitched_ptr;
+	params.kind = make_cudaMemcpyKind(from, to);
 	params.extent = _data_gpu_extent;
 	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
 		error_t::SSV_ERROR_INVALID_VALUE);
 }
 
-void BlobBase::copyToGpu(void *from_cpu_data)
+void BlobBase::copyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const
 {
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
-
-	if (from_cpu_data == nullptr)
+	if ((from != storage_t::CPU && from != storage_t::GPU)
+		|| (to != storage_t::CPU && to != storage_t::GPU)
+		|| dst == nullptr || dst->ptr == nullptr)
 	{
-		from_cpu_data = _data_cpu;
+		throw error_t::SSV_ERROR_INVALID_VALUE;
 	}
+
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(from_cpu_data, _nx_in_bytes, _nx_in_bytes, _ny);
+		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
 	cudaMemcpy3DParms params = { 0 };
-	params.srcPtr = data_cpu_pitched_ptr;
-	params.dstPtr = _data_gpu;
-	params.kind = cudaMemcpyHostToDevice;
+	if (from == storage_t::CPU)
+		params.srcPtr = data_cpu_pitched_ptr;
+	else
+		params.srcPtr = _data_gpu;
+	params.dstPtr = *dst;
+	params.kind = make_cudaMemcpyKind(from, to);
 	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params), 
+	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
+		error_t::SSV_ERROR_INVALID_VALUE);
+}
+
+void BlobBase::copyFrom(void *src, storage_t from, storage_t to)
+{
+	if ((from != storage_t::CPU && from != storage_t::GPU)
+		|| src == nullptr)
+	{
+		throw error_t::SSV_ERROR_INVALID_VALUE;
+	}
+
+	cudaPitchedPtr src_pitched_ptr =
+		make_cudaPitchedPtr(src, _nx_in_bytes, _nx_in_bytes, _ny);
+	cudaPitchedPtr data_cpu_pitched_ptr =
+		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
+	cudaMemcpy3DParms params = { 0 };
+	if (to == storage_t::CPU)
+		params.dstPtr = data_cpu_pitched_ptr;
+	else
+		params.dstPtr = _data_gpu;
+	params.srcPtr = src_pitched_ptr;
+	params.kind = make_cudaMemcpyKind(from, to);
+	params.extent = _data_gpu_extent;
+	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
+		error_t::SSV_ERROR_INVALID_VALUE);
+}
+
+void BlobBase::copyFrom(cudaPitchedPtr *src, storage_t from, storage_t to)
+{
+	if ((from != storage_t::CPU && from != storage_t::GPU)
+		|| src == nullptr || src->ptr == nullptr)
+	{
+		throw error_t::SSV_ERROR_INVALID_VALUE;
+	}
+
+	cudaPitchedPtr data_cpu_pitched_ptr =
+		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
+	cudaMemcpy3DParms params = { 0 };
+	if (from == storage_t::CPU)
+		params.dstPtr = data_cpu_pitched_ptr;
+	else
+		params.dstPtr = _data_gpu;
+	params.srcPtr = *src;
+	params.kind = make_cudaMemcpyKind(from, to);
+	params.extent = _data_gpu_extent;
+	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
 		error_t::SSV_ERROR_INVALID_VALUE);
 }
 

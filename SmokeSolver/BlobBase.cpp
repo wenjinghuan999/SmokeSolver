@@ -9,7 +9,7 @@ BlobBase::BlobBase()
 }
 
 BlobBase::BlobBase(size_t nx_in_bytes, uint ny, uint nz,
-	int gpu_device, bool cpu_copy)
+	int gpu_device, storage_t storage)
 	: _nx_in_bytes(0), _ny(0), _nz(0), _data_cpu(nullptr)
 {
 	if (nx_in_bytes == 0 || ny == 0 || nz == 0)
@@ -21,7 +21,7 @@ BlobBase::BlobBase(size_t nx_in_bytes, uint ny, uint nz,
 	_ny = ny; 
 	_nz = nz;
 
-	if (cpu_copy)
+	if (underlying(storage) & underlying(storage_t::CPU))
 	{
 		_data_cpu = new byte[_nx_in_bytes * _ny * _nz];
 		if (!_data_cpu)

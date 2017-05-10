@@ -8,6 +8,8 @@
 #include <device_functions.h>
 #include <device_launch_parameters.h>
 #include <curand_kernel.h>
+#include <cusparse_v2.h>
+#include <cublas_v2.h>
 
 #include <helper_cuda.h>
 #include <helper_math.h>

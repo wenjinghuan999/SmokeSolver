@@ -12,9 +12,42 @@ namespace ssv
 	// Element-wise add
 	template <typename _T>
 	void add(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	void add(Blob<_T> &qout, const Blob<_T> &q1, _T v);
+	template <typename _T>
+	Blob<_T> &operator+=(Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	Blob<_T> &operator+=(Blob<_T> &q1, _T v);
+
 	// Element-wise sub
 	template <typename _T>
 	void sub(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	void sub(Blob<_T> &qout, const Blob<_T> &q1, _T v);
+	template <typename _T>
+	Blob<_T> &operator-=(Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	Blob<_T> &operator-=(Blob<_T> &q1, _T v);
+
+	// Element-wise mul
+	template <typename _T>
+	void mul(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	void mul(Blob<_T> &qout, const Blob<_T> &q1, _T v);
+	template <typename _T>
+	Blob<_T> &operator*=(Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	Blob<_T> &operator*=(Blob<_T> &q1, _T v);
+
+	// Element-wise div
+	template <typename _T>
+	void div(Blob<_T> &qout, const Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	void div(Blob<_T> &qout, const Blob<_T> &q1, _T v);
+	template <typename _T>
+	Blob<_T> &operator/=(Blob<_T> &q1, const Blob<_T> &q2);
+	template <typename _T>
+	Blob<_T> &operator/=(Blob<_T> &q1, _T v);
 
 	// Partial difference by x
 	template <typename _T>

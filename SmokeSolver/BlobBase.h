@@ -17,6 +17,12 @@ namespace ssv
 	{
 	public:
 		typedef BlobShape shape_t;
+		enum class storage_t : unsigned char
+		{
+			CPU = 1,
+			GPU = 2,
+			Both = 3
+		};
 
 	public:
 		BlobBase();
@@ -25,7 +31,7 @@ namespace ssv
 		// gpu_device: cuda device id for underlying storage
 		// cpu_copy: if true, copying from and to CPU is enabled
 		BlobBase(size_t nx_in_bytes, uint ny, uint nz = 1u,
-			int gpu_device = 0, bool cpu_copy = true);
+			int gpu_device = 0, storage_t storage = storage_t::Both);
 		BlobBase(const BlobBase &other);
 		BlobBase &operator= (const BlobBase &other);
 		BlobBase(BlobBase &&other);
@@ -33,15 +39,25 @@ namespace ssv
 		~BlobBase();
 
 	public:
-		// Copy data to CPU
-		// from_gpu_data: cudaPitchedPtr from where data should be copied
-		//                [default] = nullptr: from GPU data of this Blob 
-		void copyToCpu(cudaPitchedPtr *from_gpu_data = nullptr);
+		// Sync data from GPU to CPU
+		void syncGpu2Cpu();
 
-		// Copy data to GPU
-		// from_cpu_data: pointer from where data should be copied
-		//                [default] = nullptr: from CPU data of this Blob 
-		void copyToGpu(void *from_cpu_data = nullptr);
+		// Sync data from CPU to GPU
+		void syncCpu2Gpu();
+
+		// Copy data to some buffer
+		// dst:  destination
+		// from: from CPU/GPU data of this Blob
+		// to:   to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
+		void copyTo(void *dst, storage_t from, storage_t to) const;
+		void copyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const;
+
+		// Copy data from some buffer
+		// src:  source
+		// from: from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
+		// to:   to CPU/GPU/Both data of this Blob
+		void copyFrom(void *src, storage_t from, storage_t to);
+		void copyFrom(cudaPitchedPtr *src, storage_t from, storage_t to);
 
 		// Destroy the specific texture
 		// if texture_object == 0, destroy all textures
@@ -158,6 +174,7 @@ namespace ssv
 		void _CopyCuda(const BlobBase &other, int gpu_device);
 		void _MoveCuda(BlobBase &&other);
 		void _DestroyCuda();
+
 
 	protected:
 		static texture_param_t _MakeTextureParam(
