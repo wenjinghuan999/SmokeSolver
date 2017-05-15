@@ -39,6 +39,10 @@ class Smoke2d final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>> AsyncStep(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>>(AsyncStepRaw(context, request, cq));
     }
+    virtual ::grpc::Status Reset(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::ssv::Result* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>> AsyncReset(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>>(AsyncResetRaw(context, request, cq));
+    }
     virtual ::grpc::Status Destroy(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::ssv::Result* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>> AsyncDestroy(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>>(AsyncDestroyRaw(context, request, cq));
@@ -52,6 +56,7 @@ class Smoke2d final {
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>* AsyncInitRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dInitParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>* AsyncStepRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>* AsyncResetRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ssv::Result>* AsyncDestroyRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::ssv::DataChunk>* GetDataRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dGetDataParams& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::ssv::DataChunk>* AsyncGetDataRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dGetDataParams& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
@@ -66,6 +71,10 @@ class Smoke2d final {
     ::grpc::Status Step(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::ssv::Result* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ssv::Result>> AsyncStep(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ssv::Result>>(AsyncStepRaw(context, request, cq));
+    }
+    ::grpc::Status Reset(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::ssv::Result* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ssv::Result>> AsyncReset(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ssv::Result>>(AsyncResetRaw(context, request, cq));
     }
     ::grpc::Status Destroy(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::ssv::Result* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ssv::Result>> AsyncDestroy(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::grpc::CompletionQueue* cq) {
@@ -82,11 +91,13 @@ class Smoke2d final {
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     ::grpc::ClientAsyncResponseReader< ::ssv::Result>* AsyncInitRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dInitParams& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::ssv::Result>* AsyncStepRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::ssv::Result>* AsyncResetRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::ssv::Result>* AsyncDestroyRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::ssv::DataChunk>* GetDataRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dGetDataParams& request) override;
     ::grpc::ClientAsyncReader< ::ssv::DataChunk>* AsyncGetDataRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dGetDataParams& request, ::grpc::CompletionQueue* cq, void* tag) override;
     const ::grpc::RpcMethod rpcmethod_Init_;
     const ::grpc::RpcMethod rpcmethod_Step_;
+    const ::grpc::RpcMethod rpcmethod_Reset_;
     const ::grpc::RpcMethod rpcmethod_Destroy_;
     const ::grpc::RpcMethod rpcmethod_GetData_;
   };
@@ -98,6 +109,7 @@ class Smoke2d final {
     virtual ~Service();
     virtual ::grpc::Status Init(::grpc::ServerContext* context, const ::ssv::Smoke2dInitParams* request, ::ssv::Result* response);
     virtual ::grpc::Status Step(::grpc::ServerContext* context, const ::ssv::Smoke2dStepParams* request, ::ssv::Result* response);
+    virtual ::grpc::Status Reset(::grpc::ServerContext* context, const ::ssv::Smoke2dResetParams* request, ::ssv::Result* response);
     virtual ::grpc::Status Destroy(::grpc::ServerContext* context, const ::ssv::Smoke2dDestroyParams* request, ::ssv::Result* response);
     virtual ::grpc::Status GetData(::grpc::ServerContext* context, const ::ssv::Smoke2dGetDataParams* request, ::grpc::ServerWriter< ::ssv::DataChunk>* writer);
   };
@@ -142,12 +154,32 @@ class Smoke2d final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_Reset : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_Reset() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_Reset() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Reset(::grpc::ServerContext* context, const ::ssv::Smoke2dResetParams* request, ::ssv::Result* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestReset(::grpc::ServerContext* context, ::ssv::Smoke2dResetParams* request, ::grpc::ServerAsyncResponseWriter< ::ssv::Result>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_Destroy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_Destroy() {
-      ::grpc::Service::MarkMethodAsync(2);
+      ::grpc::Service::MarkMethodAsync(3);
     }
     ~WithAsyncMethod_Destroy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -158,7 +190,7 @@ class Smoke2d final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestDestroy(::grpc::ServerContext* context, ::ssv::Smoke2dDestroyParams* request, ::grpc::ServerAsyncResponseWriter< ::ssv::Result>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -167,7 +199,7 @@ class Smoke2d final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_GetData() {
-      ::grpc::Service::MarkMethodAsync(3);
+      ::grpc::Service::MarkMethodAsync(4);
     }
     ~WithAsyncMethod_GetData() override {
       BaseClassMustBeDerivedFromService(this);
@@ -178,10 +210,10 @@ class Smoke2d final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetData(::grpc::ServerContext* context, ::ssv::Smoke2dGetDataParams* request, ::grpc::ServerAsyncWriter< ::ssv::DataChunk>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(3, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Init<WithAsyncMethod_Step<WithAsyncMethod_Destroy<WithAsyncMethod_GetData<Service > > > > AsyncService;
+  typedef WithAsyncMethod_Init<WithAsyncMethod_Step<WithAsyncMethod_Reset<WithAsyncMethod_Destroy<WithAsyncMethod_GetData<Service > > > > > AsyncService;
   template <class BaseClass>
   class WithGenericMethod_Init : public BaseClass {
    private:
@@ -217,12 +249,29 @@ class Smoke2d final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_Reset : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_Reset() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_Reset() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Reset(::grpc::ServerContext* context, const ::ssv::Smoke2dResetParams* request, ::ssv::Result* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_Destroy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_Destroy() {
-      ::grpc::Service::MarkMethodGeneric(2);
+      ::grpc::Service::MarkMethodGeneric(3);
     }
     ~WithGenericMethod_Destroy() override {
       BaseClassMustBeDerivedFromService(this);
@@ -239,7 +288,7 @@ class Smoke2d final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_GetData() {
-      ::grpc::Service::MarkMethodGeneric(3);
+      ::grpc::Service::MarkMethodGeneric(4);
     }
     ~WithGenericMethod_GetData() override {
       BaseClassMustBeDerivedFromService(this);
@@ -291,12 +340,32 @@ class Smoke2d final {
     virtual ::grpc::Status StreamedStep(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::ssv::Smoke2dStepParams,::ssv::Result>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_Reset : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_Reset() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::StreamedUnaryHandler< ::ssv::Smoke2dResetParams, ::ssv::Result>(std::bind(&WithStreamedUnaryMethod_Reset<BaseClass>::StreamedReset, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_Reset() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Reset(::grpc::ServerContext* context, const ::ssv::Smoke2dResetParams* request, ::ssv::Result* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedReset(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::ssv::Smoke2dResetParams,::ssv::Result>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_Destroy : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_Destroy() {
-      ::grpc::Service::MarkMethodStreamed(2,
+      ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::StreamedUnaryHandler< ::ssv::Smoke2dDestroyParams, ::ssv::Result>(std::bind(&WithStreamedUnaryMethod_Destroy<BaseClass>::StreamedDestroy, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithStreamedUnaryMethod_Destroy() override {
@@ -310,14 +379,14 @@ class Smoke2d final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedDestroy(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::ssv::Smoke2dDestroyParams,::ssv::Result>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Init<WithStreamedUnaryMethod_Step<WithStreamedUnaryMethod_Destroy<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Init<WithStreamedUnaryMethod_Step<WithStreamedUnaryMethod_Reset<WithStreamedUnaryMethod_Destroy<Service > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_GetData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithSplitStreamingMethod_GetData() {
-      ::grpc::Service::MarkMethodStreamed(3,
+      ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::SplitServerStreamingHandler< ::ssv::Smoke2dGetDataParams, ::ssv::DataChunk>(std::bind(&WithSplitStreamingMethod_GetData<BaseClass>::StreamedGetData, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithSplitStreamingMethod_GetData() override {
@@ -332,7 +401,7 @@ class Smoke2d final {
     virtual ::grpc::Status StreamedGetData(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::ssv::Smoke2dGetDataParams,::ssv::DataChunk>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_GetData<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Init<WithStreamedUnaryMethod_Step<WithStreamedUnaryMethod_Destroy<WithSplitStreamingMethod_GetData<Service > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Init<WithStreamedUnaryMethod_Step<WithStreamedUnaryMethod_Reset<WithStreamedUnaryMethod_Destroy<WithSplitStreamingMethod_GetData<Service > > > > > StreamedService;
 };
 
 }  // namespace ssv

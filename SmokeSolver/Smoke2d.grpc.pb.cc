@@ -18,6 +18,7 @@ namespace ssv {
 static const char* Smoke2d_method_names[] = {
   "/ssv.Smoke2d/Init",
   "/ssv.Smoke2d/Step",
+  "/ssv.Smoke2d/Reset",
   "/ssv.Smoke2d/Destroy",
   "/ssv.Smoke2d/GetData",
 };
@@ -30,8 +31,9 @@ std::unique_ptr< Smoke2d::Stub> Smoke2d::NewStub(const std::shared_ptr< ::grpc::
 Smoke2d::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_Init_(Smoke2d_method_names[0], ::grpc::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Step_(Smoke2d_method_names[1], ::grpc::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Destroy_(Smoke2d_method_names[2], ::grpc::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_GetData_(Smoke2d_method_names[3], ::grpc::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_Reset_(Smoke2d_method_names[2], ::grpc::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Destroy_(Smoke2d_method_names[3], ::grpc::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetData_(Smoke2d_method_names[4], ::grpc::RpcMethod::SERVER_STREAMING, channel)
   {}
 
 ::grpc::Status Smoke2d::Stub::Init(::grpc::ClientContext* context, const ::ssv::Smoke2dInitParams& request, ::ssv::Result* response) {
@@ -48,6 +50,14 @@ Smoke2d::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
 
 ::grpc::ClientAsyncResponseReader< ::ssv::Result>* Smoke2d::Stub::AsyncStepRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dStepParams& request, ::grpc::CompletionQueue* cq) {
   return new ::grpc::ClientAsyncResponseReader< ::ssv::Result>(channel_.get(), cq, rpcmethod_Step_, context, request);
+}
+
+::grpc::Status Smoke2d::Stub::Reset(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::ssv::Result* response) {
+  return ::grpc::BlockingUnaryCall(channel_.get(), rpcmethod_Reset_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::ssv::Result>* Smoke2d::Stub::AsyncResetRaw(::grpc::ClientContext* context, const ::ssv::Smoke2dResetParams& request, ::grpc::CompletionQueue* cq) {
+  return new ::grpc::ClientAsyncResponseReader< ::ssv::Result>(channel_.get(), cq, rpcmethod_Reset_, context, request);
 }
 
 ::grpc::Status Smoke2d::Stub::Destroy(::grpc::ClientContext* context, const ::ssv::Smoke2dDestroyParams& request, ::ssv::Result* response) {
@@ -80,10 +90,15 @@ Smoke2d::Service::Service() {
   AddMethod(new ::grpc::RpcServiceMethod(
       Smoke2d_method_names[2],
       ::grpc::RpcMethod::NORMAL_RPC,
+      new ::grpc::RpcMethodHandler< Smoke2d::Service, ::ssv::Smoke2dResetParams, ::ssv::Result>(
+          std::mem_fn(&Smoke2d::Service::Reset), this)));
+  AddMethod(new ::grpc::RpcServiceMethod(
+      Smoke2d_method_names[3],
+      ::grpc::RpcMethod::NORMAL_RPC,
       new ::grpc::RpcMethodHandler< Smoke2d::Service, ::ssv::Smoke2dDestroyParams, ::ssv::Result>(
           std::mem_fn(&Smoke2d::Service::Destroy), this)));
   AddMethod(new ::grpc::RpcServiceMethod(
-      Smoke2d_method_names[3],
+      Smoke2d_method_names[4],
       ::grpc::RpcMethod::SERVER_STREAMING,
       new ::grpc::ServerStreamingHandler< Smoke2d::Service, ::ssv::Smoke2dGetDataParams, ::ssv::DataChunk>(
           std::mem_fn(&Smoke2d::Service::GetData), this)));
@@ -100,6 +115,13 @@ Smoke2d::Service::~Service() {
 }
 
 ::grpc::Status Smoke2d::Service::Step(::grpc::ServerContext* context, const ::ssv::Smoke2dStepParams* request, ::ssv::Result* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status Smoke2d::Service::Reset(::grpc::ServerContext* context, const ::ssv::Smoke2dResetParams* request, ::ssv::Result* response) {
   (void) context;
   (void) request;
   (void) response;

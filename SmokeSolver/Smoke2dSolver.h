@@ -70,8 +70,9 @@ namespace ssv
 		}
 
 		void addSource(uint x0, uint y0, uint x1, uint y1);
-
+		void genNoise();
 		void *getData(size_t *size = nullptr);
+		void saveData(const std::string &filename);
 	public:
 		virtual void init();
 		virtual void step();

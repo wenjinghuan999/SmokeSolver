@@ -6,6 +6,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <google/protobuf/stubs/common.h>
+#include <glm/glm.hpp>
 
 #include <type_traits>
 
@@ -18,6 +19,23 @@ namespace ssv
 	typedef float4 T4;
 	typedef ::google::protobuf::uint8 byte;
 	typedef ::google::protobuf::uint uint;
+
+	template <typename ...Types>
+	inline __host__ __device__ T2 make_T2(Types ...Args)
+	{
+		return make_float2(std::forward<Types>(Args)...);
+	}
+	template <typename ...Types>
+	inline __host__ __device__ T3 make_T3(Types ...Args)
+	{
+		return make_float3(std::forward<Types>(Args)...);
+	}
+	template <typename ...Types>
+	inline __host__ __device__ T4 make_T4(Types ...Args)
+	{
+		return make_float4(std::forward<Types>(Args)...);
+	}
+
 
 	enum class error_t : unsigned int
 	{

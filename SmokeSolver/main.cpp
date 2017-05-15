@@ -105,13 +105,14 @@ namespace
 					1.f, underlying(Smoke2dSolver::CellType::CellTypeSource)
 				}));
 				solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp2<T2, byte>{
-					make_float2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
-					make_float2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeSource)
+					make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
+					make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeSource)
 				}));
-				solver.setForceMethod(ForceMethodSimple(0.003f, 0.25f, 0.f));
+				solver.setForceMethod(ForceMethodSimple(0.0015f, 0.125f, 0.f));
 
 				solver.init();
-				solver.addSource(params->nx()/2-2, params->nx()/2+1, 0, 2);
+				solver.genNoise();
+				//solver.addSource(params->nx()/2-2, params->nx()/2+1, 0, 2);
 			}
 			catch (error_t e)
 			{
@@ -129,6 +130,23 @@ namespace
 			try
 			{
 				solver.step();
+			}
+			catch (error_t e)
+			{
+				result->set_status(underlying(e));
+				return grpc::Status::CANCELLED;
+			}
+
+			return grpc::Status::OK;
+		}
+		grpc::Status Reset(grpc::ServerContext* context,
+			const Smoke2dResetParams* params,
+			Result* result) override
+		{
+			result->set_status(0);
+			try
+			{
+				solver.genNoise();
 			}
 			catch (error_t e)
 			{
@@ -206,6 +224,39 @@ void RunServer() {
 
 /// =================================================
 
+void Local(uint nx, uint ny) {
+	Smoke2dSolver solver;
+
+	solver.setSize(nx, ny);
+	solver.setAdvectMethod(AdvectMethodSemiLagrangian());
+	solver.setEulerMethod(EulerMethodForward());
+	// solver.setPoissonMethod(PoissonMethodVCycle(3, 700, 0.4));
+	solver.setPoissonMethod(PoissonMethodCG(100));
+	solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp2<T, byte>{
+		0, underlying(Smoke2dSolver::CellType::CellTypeWall),
+			1.f, underlying(Smoke2dSolver::CellType::CellTypeSource)
+	}));
+	solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp2<T2, byte>{
+		make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
+			make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeSource)
+	}));
+	solver.setForceMethod(ForceMethodSimple(0.0015f, 0.125f, 0.f));
+
+	solver.init();
+	solver.genNoise();
+
+	int frame = 0;
+	while (frame < 50000)
+	{
+		std::cout << frame << std::endl;
+		solver.saveData("data/" + std::to_string(frame));
+		frame++;
+		if (frame % 100 == 0) solver.genNoise();
+		else solver.step();
+	}
+	solver.destory();
+}
+
 int main()
 {
 	thread ts = thread(RunServer);
@@ -220,6 +271,8 @@ int main()
 	//output::PrintRawCPU(data_client, 16 * 16, "data_client");
 
 	ts.join();
+	
+	//Local(64, 64);
 
 	return 0;
 }

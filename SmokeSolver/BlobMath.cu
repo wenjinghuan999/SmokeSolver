@@ -4,6 +4,9 @@
 #include "BlobMath.h"
 using namespace ssv;
 
+#include <helper_math.h>
+#include <glm/gtc/noise.hpp>
+
 #include <thrust/transform.h>
 using thrust::placeholders::_1;
 using thrust::placeholders::_2;
@@ -179,6 +182,167 @@ template Blob<T> &ssv::operator/=<T>(Blob<T> &, T);
 template Blob<T2> &ssv::operator/=<T2>(Blob<T2> &, T2);
 template Blob<T4> &ssv::operator/=<T4>(Blob<T4> &, T4);
 
+template <typename _T>
+void ssv::neg(Blob<_T> &q)
+{
+	thrust::transform(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), -_1);
+}
+
+template void ssv::neg<T>(Blob<T> &);
+
+namespace
+{
+	using ssv::uint;
+
+	// Zip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelZip(
+		BlobWrapper<T2> qout, BlobWrapperConst<T> qx, BlobWrapperConst<T> qy
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		qout(x, y, z) = make_T2(qx(x, y, z), qy(x, y, z));
+	}
+
+	// Zip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelZip(
+		BlobWrapper<T4> qout, BlobWrapperConst<T> qx, BlobWrapperConst<T> qy,
+		BlobWrapperConst<T> qz
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		qout(x, y, z) = make_T4(qx(x, y, z), qy(x, y, z), qz(x, y, z), 0.f);
+	}
+
+	// Zip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelZip(
+		BlobWrapper<T4> qout, BlobWrapperConst<T> qx, BlobWrapperConst<T> qy, 
+		BlobWrapperConst<T> qz, BlobWrapperConst<T> qw
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		qout(x, y, z) = make_T4(qx(x, y, z), qy(x, y, z), qz(x, y, z), qw(x, y, z));
+	}
+}
+
+void ssv::zip(Blob<T2>& qout, const Blob<T>& qx, const Blob<T>& qy)
+{
+	kernelZip<<<dim3(qout.ny(), qout.nz()), qout.nx()>>>(
+		qout.wrapper(), qx.wrapper_const(), qy.wrapper_const()
+		);
+}
+
+void ssv::zip(Blob<T4>& qout, const Blob<T>& qx, const Blob<T>& qy, const Blob<T>& qz)
+{
+	kernelZip<<<dim3(qout.ny(), qout.nz()), qout.nx()>>>(
+		qout.wrapper(), qx.wrapper_const(), qy.wrapper_const(),
+		qz.wrapper_const()
+		);
+}
+
+void ssv::zip(Blob<T4>& qout, const Blob<T>& qx, const Blob<T>& qy, const Blob<T>& qz, const Blob<T>& qw)
+{
+	kernelZip<<<dim3(qout.ny(), qout.nz()), qout.nx()>>>(
+		qout.wrapper(), qx.wrapper_const(), qy.wrapper_const(),
+		qz.wrapper_const(), qw.wrapper_const()
+		);
+}
+
+namespace
+{
+	using ssv::uint;
+
+	// Unzip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelUnzip(
+		BlobWrapper<T> qxout, BlobWrapper<T> qyout, BlobWrapperConst<T2> q
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		T2 qq = q(x, y, z);
+		qxout(x, y, z) = qq.x;
+		qyout(x, y, z) = qq.y;
+	}
+
+	// Unzip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelUnzip(
+		BlobWrapper<T> qxout, BlobWrapper<T> qyout,
+		BlobWrapper<T> qzout, BlobWrapperConst<T4> q
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		T4 qq = q(x, y, z);
+		qxout(x, y, z) = qq.x;
+		qyout(x, y, z) = qq.y;
+		qzout(x, y, z) = qq.z;
+	}
+
+	// Unzip
+	// LAUNCH : block (ny, nz), thread (nx)
+	// params : nx x ny (x nz)
+	__global__ void kernelUnzip(
+		BlobWrapper<T> qxout, BlobWrapper<T> qyout, 
+		BlobWrapper<T> qzout, BlobWrapper<T> qwout, BlobWrapperConst<T4> q
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		T4 qq = q(x, y, z);
+		qxout(x, y, z) = qq.x;
+		qyout(x, y, z) = qq.y;
+		qzout(x, y, z) = qq.z;
+		qwout(x, y, z) = qq.w;
+	}
+
+}
+
+void ssv::unzip(Blob<T>& qxout, Blob<T>& qyout, const Blob<T2>& q)
+{
+	kernelUnzip<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+		qxout.wrapper(), qyout.wrapper(), q.wrapper_const()
+		);
+}
+
+void ssv::unzip(Blob<T>& qxout, Blob<T>& qyout, Blob<T>& qzout, const Blob<T4>& q)
+{
+	kernelUnzip<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+		qxout.wrapper(), qyout.wrapper(), 
+		qzout.wrapper(), q.wrapper_const()
+		);
+}
+
+void ssv::unzip(Blob<T>& qxout, Blob<T>& qyout, Blob<T>& qzout, Blob<T>& qwout, const Blob<T4>& q)
+{
+	kernelUnzip<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+		qxout.wrapper(), qyout.wrapper(), 
+		qzout.wrapper(), qwout.wrapper(), q.wrapper_const()
+		);
+}
 
 namespace
 {
@@ -484,3 +648,38 @@ void ssv::laplacian3d(Blob<_T> &d, const Blob<_T> &q)
 template void ssv::laplacian3d<T>(Blob<T> &d, const Blob<T> &q);
 template void ssv::laplacian3d<T2>(Blob<T2> &d, const Blob<T2> &q);
 template void ssv::laplacian3d<T4>(Blob<T4> &d, const Blob<T4> &q);
+
+namespace
+{
+	using ssv::uint;
+
+	// 2D simplex noise
+	// LAUNCH : block ny, thread nx
+	// q : nx x ny
+	__global__ void kernelSimplex2d(
+		BlobWrapper<T> q, T2 f, T2 s
+	)
+	{
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+		
+		q(x, y) = glm::simplex(glm::vec2(s.x + x / f.x, s.y + y / f.y));
+	}
+}
+
+void ssv::simplex2d(Blob<T> &q, T2 factor, T2 offset)
+{
+	kernelSimplex2d<<<q.ny(), q.nx()>>>(
+		q.wrapper(), factor, offset
+		);
+}
+
+void ssv::simplex2d(Blob<T> &q, Blob<T> &dx, Blob<T> &dy, T2 factor, T2 offset)
+{
+	kernelSimplex2d<<<q.ny(), q.nx()>>>(
+		q.wrapper(), factor, offset
+		);
+	diff_x(dy, q);
+	diff_y(dx, q);
+	neg(dx);
+}

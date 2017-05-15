@@ -8,6 +8,7 @@
 #include "Blob.h"
 
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 
 namespace std
@@ -36,7 +37,7 @@ namespace ssv
 	namespace output
 	{
 		template <typename _T>
-		void PrintRawCPU(_T *a, size_t length = 1u, std::string tag = "data", std::ostream &out = std::cout)
+		void PrintRawCPU(_T *a, size_t length = 1u, const std::string &tag = "data", std::ostream &out = std::cout)
 		{
 			if (a == nullptr)
 			{
@@ -57,7 +58,7 @@ namespace ssv
 		class Blob;
 
 		template <typename _T>
-		void PrintBlobCPU(const ssv::Blob<_T> &b, std::string tag = "data", std::ostream &out = std::cout)
+		void PrintBlobCPU(const ssv::Blob<_T> &b, const std::string &tag = "data", std::ostream &out = std::cout)
 		{
 			for (uint z = 0; z < b.nz(); z++)
 			{
@@ -70,6 +71,13 @@ namespace ssv
 				}
 				out << std::endl;
 			}
+		}
+
+		inline void SaveBlobCPU(const ssv::BlobBase &b, const std::string &filename = "data.dat")
+		{
+			std::ofstream fout(filename, std::ios::binary);
+			fout.write(reinterpret_cast<const char *>(b.data_cpu()), b.size_cpu_in_bytes());
+			fout.close();
 		}
 	}
 }

@@ -45,6 +45,9 @@ extern Smoke2dGetDataParamsDefaultTypeInternal _Smoke2dGetDataParams_default_ins
 class Smoke2dInitParams;
 class Smoke2dInitParamsDefaultTypeInternal;
 extern Smoke2dInitParamsDefaultTypeInternal _Smoke2dInitParams_default_instance_;
+class Smoke2dResetParams;
+class Smoke2dResetParamsDefaultTypeInternal;
+extern Smoke2dResetParamsDefaultTypeInternal _Smoke2dResetParams_default_instance_;
 class Smoke2dStepParams;
 class Smoke2dStepParamsDefaultTypeInternal;
 extern Smoke2dStepParamsDefaultTypeInternal _Smoke2dStepParams_default_instance_;
@@ -223,6 +226,82 @@ class Smoke2dStepParams : public ::google::protobuf::Message /* @@protoc_inserti
   // accessors -------------------------------------------------------
 
   // @@protoc_insertion_point(class_scope:ssv.Smoke2dStepParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  mutable int _cached_size_;
+  friend struct  protobuf_Smoke2d_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class Smoke2dResetParams : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:ssv.Smoke2dResetParams) */ {
+ public:
+  Smoke2dResetParams();
+  virtual ~Smoke2dResetParams();
+
+  Smoke2dResetParams(const Smoke2dResetParams& from);
+
+  inline Smoke2dResetParams& operator=(const Smoke2dResetParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Smoke2dResetParams& default_instance();
+
+  static inline const Smoke2dResetParams* internal_default_instance() {
+    return reinterpret_cast<const Smoke2dResetParams*>(
+               &_Smoke2dResetParams_default_instance_);
+  }
+
+  void Swap(Smoke2dResetParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline Smoke2dResetParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Smoke2dResetParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Smoke2dResetParams& from);
+  void MergeFrom(const Smoke2dResetParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output)
+      const PROTOBUF_FINAL {
+    return InternalSerializeWithCachedSizesToArray(
+        ::google::protobuf::io::CodedOutputStream::IsDefaultSerializationDeterministic(), output);
+  }
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Smoke2dResetParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:ssv.Smoke2dResetParams)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -597,6 +676,10 @@ inline void Smoke2dInitParams::set_ny(::google::protobuf::uint32 value) {
 
 // -------------------------------------------------------------------
 
+// Smoke2dResetParams
+
+// -------------------------------------------------------------------
+
 // Smoke2dDestroyParams
 
 // -------------------------------------------------------------------
@@ -678,6 +761,8 @@ inline void DataChunk::set_allocated_data(::std::string* data) {
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

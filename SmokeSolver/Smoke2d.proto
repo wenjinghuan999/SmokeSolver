@@ -5,6 +5,7 @@ package ssv;
 service Smoke2d {
 	rpc Init(Smoke2dInitParams) returns (Result) {}
 	rpc Step(Smoke2dStepParams) returns (Result) {}
+	rpc Reset(Smoke2dResetParams) returns (Result) {}
 	rpc Destroy(Smoke2dDestroyParams) returns (Result) {}
 
 	rpc GetData(Smoke2dGetDataParams) returns (stream DataChunk) {}
@@ -16,6 +17,10 @@ message Smoke2dInitParams {
 }
 
 message Smoke2dStepParams {
+
+}
+
+message Smoke2dResetParams {
 
 }
 

@@ -6,6 +6,7 @@ using namespace ssv;
 
 #include <fstream>
 #include <sstream>
+#include <random>
 
 
 void Smoke2dSolver::init()
@@ -36,20 +37,57 @@ void Smoke2dSolver::init()
 	ping = 0;
 }
 
-void ssv::Smoke2dSolver::addSource(uint x0, uint x1, uint y0, uint y1)
+void Smoke2dSolver::addSource(uint x0, uint x1, uint y0, uint y1)
 {
 	_tp.setDataCubeCpu(underlying(CellType::CellTypeSource), x0, x1, y0, y1);
 	_tp.syncCpu2Gpu();
 }
 
+void Smoke2dSolver::genNoise()
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dis(0.f, 32768.f);
+	T2 offset = make_T2(dis(gen), dis(gen));
+	simplex2d(_rh[ping], _temp1a, _temp1b, make_T2(16.f, 16.f), offset);
+	zip(_u, _temp1a, _temp1b);
+
+	offset = make_T2(dis(gen), dis(gen));
+	simplex2d(_rh[ping], make_T2(16.f, 16.f), offset);
+	simplex2d(_tm[ping], make_T2(16.f, 16.f), offset);
+}
+
 void *Smoke2dSolver::getData(size_t *size)
 {
-	if (size != nullptr)
+	static bool rh_or_u = 0;
+	if (rh_or_u == 0)
 	{
-		*size = _rh[ping].size_cpu_in_bytes();
+		rh_or_u ^= 1;
+		if (size != nullptr)
+		{
+			*size = _rh[ping].size_cpu_in_bytes();
+		}
+		_rh[ping].syncGpu2Cpu();
+		return _rh[ping].data_cpu();
 	}
+	else
+	{
+		rh_or_u ^= 1;
+		if (size != nullptr)
+		{
+			*size = _u.size_cpu_in_bytes();
+		}
+		_u.syncGpu2Cpu();
+		return _u.data_cpu();
+	}
+}
+
+void Smoke2dSolver::saveData(const std::string &filename)
+{
 	_rh[ping].syncGpu2Cpu();
-	return _rh[ping].data_cpu();
+	output::SaveBlobCPU(_rh[ping], filename + "_rh");
+	_u.syncGpu2Cpu();
+	output::SaveBlobCPU(_u, filename + "_u");
 }
 
 void Smoke2dSolver::step()
@@ -84,8 +122,16 @@ void Smoke2dSolver::step()
 	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
 	laplacian2d(u1, u);
-	u1 *= make_float2(0.1f, 0.1f);
+	u1 *= make_T2(0.2f, 0.2f);
 	_euler2(u, u1);
+
+	laplacian2d(temp1, rh);
+	temp1 *= 0.01f;
+	_euler(rh, temp1);
+
+	laplacian2d(temp1, tm);
+	temp1 *= 0.01f;
+	_euler(tm, temp1);
 
 	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
@@ -105,8 +151,8 @@ void Smoke2dSolver::step()
 
 	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
-	std::cout << "rh size = " << rh2.size_cpu_in_bytes() << std::endl;
-	rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
+	//std::cout << "rh size = " << rh2.size_cpu_in_bytes() << std::endl;
+	//rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
 
 	ping ^= 1;
 }

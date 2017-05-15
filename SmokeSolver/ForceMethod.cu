@@ -19,7 +19,7 @@ namespace
 		__host__ __device__ const T2 operator() (
 			const T &rh, const T &tm) const
 		{
-			return make_float2(0, -alpha * rh + beta * (tm - tm0));
+			return make_T2(0.f, -alpha * rh + beta * (tm - tm0));
 		}
 	};
 	template<>

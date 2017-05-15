@@ -20,7 +20,7 @@ namespace
 		uint y = blockIdx.x;
 		uint x = threadIdx.x;
 
-		T2 p0 = make_float2(x, y) + (T)(0.5) - u(x, y);
+		T2 p0 = make_T2(x, y) + (T)(0.5) - u(x, y);
 
 		qout(x, y) = tex2D<QType>(q, p0.x, p0.y);
 	}

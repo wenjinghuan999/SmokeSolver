@@ -22,6 +22,8 @@ class Smoke2dInitParamsDefaultTypeInternal : public ::google::protobuf::internal
 } _Smoke2dInitParams_default_instance_;
 class Smoke2dStepParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Smoke2dStepParams> {
 } _Smoke2dStepParams_default_instance_;
+class Smoke2dResetParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Smoke2dResetParams> {
+} _Smoke2dResetParams_default_instance_;
 class Smoke2dDestroyParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Smoke2dDestroyParams> {
 } _Smoke2dDestroyParams_default_instance_;
 class Smoke2dGetDataParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Smoke2dGetDataParams> {
@@ -36,7 +38,7 @@ namespace protobuf_Smoke2d_2eproto {
 
 namespace {
 
-::google::protobuf::Metadata file_level_metadata[6];
+::google::protobuf::Metadata file_level_metadata[7];
 
 }  // namespace
 
@@ -49,6 +51,10 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Smoke2dInitParams, ny_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Smoke2dStepParams, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Smoke2dResetParams, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _has_bits_
@@ -74,15 +80,17 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
 static const ::google::protobuf::internal::MigrationSchema schemas[] = {
   { 0, -1, sizeof(Smoke2dInitParams)},
   { 6, -1, sizeof(Smoke2dStepParams)},
-  { 10, -1, sizeof(Smoke2dDestroyParams)},
-  { 14, -1, sizeof(Smoke2dGetDataParams)},
-  { 18, -1, sizeof(Result)},
-  { 23, -1, sizeof(DataChunk)},
+  { 10, -1, sizeof(Smoke2dResetParams)},
+  { 14, -1, sizeof(Smoke2dDestroyParams)},
+  { 18, -1, sizeof(Smoke2dGetDataParams)},
+  { 22, -1, sizeof(Result)},
+  { 27, -1, sizeof(DataChunk)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&_Smoke2dInitParams_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&_Smoke2dStepParams_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&_Smoke2dResetParams_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&_Smoke2dDestroyParams_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&_Smoke2dGetDataParams_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&_Result_default_instance_),
@@ -107,7 +115,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 6);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 7);
 }
 
 }  // namespace
@@ -117,14 +125,16 @@ void TableStruct::Shutdown() {
   delete file_level_metadata[0].reflection;
   _Smoke2dStepParams_default_instance_.Shutdown();
   delete file_level_metadata[1].reflection;
-  _Smoke2dDestroyParams_default_instance_.Shutdown();
+  _Smoke2dResetParams_default_instance_.Shutdown();
   delete file_level_metadata[2].reflection;
-  _Smoke2dGetDataParams_default_instance_.Shutdown();
+  _Smoke2dDestroyParams_default_instance_.Shutdown();
   delete file_level_metadata[3].reflection;
-  _Result_default_instance_.Shutdown();
+  _Smoke2dGetDataParams_default_instance_.Shutdown();
   delete file_level_metadata[4].reflection;
-  _DataChunk_default_instance_.Shutdown();
+  _Result_default_instance_.Shutdown();
   delete file_level_metadata[5].reflection;
+  _DataChunk_default_instance_.Shutdown();
+  delete file_level_metadata[6].reflection;
 }
 
 void TableStruct::InitDefaultsImpl() {
@@ -133,6 +143,7 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::InitProtobufDefaults();
   _Smoke2dInitParams_default_instance_.DefaultConstruct();
   _Smoke2dStepParams_default_instance_.DefaultConstruct();
+  _Smoke2dResetParams_default_instance_.DefaultConstruct();
   _Smoke2dDestroyParams_default_instance_.DefaultConstruct();
   _Smoke2dGetDataParams_default_instance_.DefaultConstruct();
   _Result_default_instance_.DefaultConstruct();
@@ -148,18 +159,20 @@ void AddDescriptorsImpl() {
   static const char descriptor[] = {
       "\n\rSmoke2d.proto\022\003ssv\"+\n\021Smoke2dInitParam"
       "s\022\n\n\002nx\030\001 \001(\r\022\n\n\002ny\030\002 \001(\r\"\023\n\021Smoke2dStep"
-      "Params\"\026\n\024Smoke2dDestroyParams\"\026\n\024Smoke2"
-      "dGetDataParams\"\030\n\006Result\022\016\n\006status\030\001 \001(\r"
-      "\"\031\n\tDataChunk\022\014\n\004data\030\001 \001(\0142\326\001\n\007Smoke2d\022"
-      "-\n\004Init\022\026.ssv.Smoke2dInitParams\032\013.ssv.Re"
-      "sult\"\000\022-\n\004Step\022\026.ssv.Smoke2dStepParams\032\013"
-      ".ssv.Result\"\000\0223\n\007Destroy\022\031.ssv.Smoke2dDe"
-      "stroyParams\032\013.ssv.Result\"\000\0228\n\007GetData\022\031."
-      "ssv.Smoke2dGetDataParams\032\016.ssv.DataChunk"
-      "\"\0000\001b\006proto3"
+      "Params\"\024\n\022Smoke2dResetParams\"\026\n\024Smoke2dD"
+      "estroyParams\"\026\n\024Smoke2dGetDataParams\"\030\n\006"
+      "Result\022\016\n\006status\030\001 \001(\r\"\031\n\tDataChunk\022\014\n\004d"
+      "ata\030\001 \001(\0142\207\002\n\007Smoke2d\022-\n\004Init\022\026.ssv.Smok"
+      "e2dInitParams\032\013.ssv.Result\"\000\022-\n\004Step\022\026.s"
+      "sv.Smoke2dStepParams\032\013.ssv.Result\"\000\022/\n\005R"
+      "eset\022\027.ssv.Smoke2dResetParams\032\013.ssv.Resu"
+      "lt\"\000\0223\n\007Destroy\022\031.ssv.Smoke2dDestroyPara"
+      "ms\032\013.ssv.Result\"\000\0228\n\007GetData\022\031.ssv.Smoke"
+      "2dGetDataParams\032\016.ssv.DataChunk\"\0000\001b\006pro"
+      "to3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 412);
+      descriptor, 483);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Smoke2d.proto", &protobuf_RegisterTypes);
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
@@ -630,6 +643,174 @@ void Smoke2dStepParams::InternalSwap(Smoke2dStepParams* other) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
+Smoke2dResetParams::Smoke2dResetParams()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_Smoke2d_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:ssv.Smoke2dResetParams)
+}
+Smoke2dResetParams::Smoke2dResetParams(const Smoke2dResetParams& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:ssv.Smoke2dResetParams)
+}
+
+void Smoke2dResetParams::SharedCtor() {
+  _cached_size_ = 0;
+}
+
+Smoke2dResetParams::~Smoke2dResetParams() {
+  // @@protoc_insertion_point(destructor:ssv.Smoke2dResetParams)
+  SharedDtor();
+}
+
+void Smoke2dResetParams::SharedDtor() {
+}
+
+void Smoke2dResetParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Smoke2dResetParams::descriptor() {
+  protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
+  return protobuf_Smoke2d_2eproto::file_level_metadata[2].descriptor;
+}
+
+const Smoke2dResetParams& Smoke2dResetParams::default_instance() {
+  protobuf_Smoke2d_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+Smoke2dResetParams* Smoke2dResetParams::New(::google::protobuf::Arena* arena) const {
+  Smoke2dResetParams* n = new Smoke2dResetParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void Smoke2dResetParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:ssv.Smoke2dResetParams)
+}
+
+bool Smoke2dResetParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:ssv.Smoke2dResetParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+  handle_unusual:
+    if (tag == 0 ||
+        ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+        ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+      goto success;
+    }
+    DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+  }
+success:
+  // @@protoc_insertion_point(parse_success:ssv.Smoke2dResetParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:ssv.Smoke2dResetParams)
+  return false;
+#undef DO_
+}
+
+void Smoke2dResetParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:ssv.Smoke2dResetParams)
+  // @@protoc_insertion_point(serialize_end:ssv.Smoke2dResetParams)
+}
+
+::google::protobuf::uint8* Smoke2dResetParams::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic;  // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:ssv.Smoke2dResetParams)
+  // @@protoc_insertion_point(serialize_to_array_end:ssv.Smoke2dResetParams)
+  return target;
+}
+
+size_t Smoke2dResetParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:ssv.Smoke2dResetParams)
+  size_t total_size = 0;
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Smoke2dResetParams::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:ssv.Smoke2dResetParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  const Smoke2dResetParams* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const Smoke2dResetParams>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:ssv.Smoke2dResetParams)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:ssv.Smoke2dResetParams)
+    MergeFrom(*source);
+  }
+}
+
+void Smoke2dResetParams::MergeFrom(const Smoke2dResetParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:ssv.Smoke2dResetParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+}
+
+void Smoke2dResetParams::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:ssv.Smoke2dResetParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Smoke2dResetParams::CopyFrom(const Smoke2dResetParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:ssv.Smoke2dResetParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Smoke2dResetParams::IsInitialized() const {
+  return true;
+}
+
+void Smoke2dResetParams::Swap(Smoke2dResetParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void Smoke2dResetParams::InternalSwap(Smoke2dResetParams* other) {
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata Smoke2dResetParams::GetMetadata() const {
+  protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
+  return protobuf_Smoke2d_2eproto::file_level_metadata[2];
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// Smoke2dResetParams
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
 Smoke2dDestroyParams::Smoke2dDestroyParams()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
@@ -665,7 +846,7 @@ void Smoke2dDestroyParams::SetCachedSize(int size) const {
 }
 const ::google::protobuf::Descriptor* Smoke2dDestroyParams::descriptor() {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[2].descriptor;
+  return protobuf_Smoke2d_2eproto::file_level_metadata[3].descriptor;
 }
 
 const Smoke2dDestroyParams& Smoke2dDestroyParams::default_instance() {
@@ -785,7 +966,7 @@ void Smoke2dDestroyParams::InternalSwap(Smoke2dDestroyParams* other) {
 
 ::google::protobuf::Metadata Smoke2dDestroyParams::GetMetadata() const {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[2];
+  return protobuf_Smoke2d_2eproto::file_level_metadata[3];
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -833,7 +1014,7 @@ void Smoke2dGetDataParams::SetCachedSize(int size) const {
 }
 const ::google::protobuf::Descriptor* Smoke2dGetDataParams::descriptor() {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[3].descriptor;
+  return protobuf_Smoke2d_2eproto::file_level_metadata[4].descriptor;
 }
 
 const Smoke2dGetDataParams& Smoke2dGetDataParams::default_instance() {
@@ -953,7 +1134,7 @@ void Smoke2dGetDataParams::InternalSwap(Smoke2dGetDataParams* other) {
 
 ::google::protobuf::Metadata Smoke2dGetDataParams::GetMetadata() const {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[3];
+  return protobuf_Smoke2d_2eproto::file_level_metadata[4];
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1004,7 +1185,7 @@ void Result::SetCachedSize(int size) const {
 }
 const ::google::protobuf::Descriptor* Result::descriptor() {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[4].descriptor;
+  return protobuf_Smoke2d_2eproto::file_level_metadata[5].descriptor;
 }
 
 const Result& Result::default_instance() {
@@ -1164,7 +1345,7 @@ void Result::InternalSwap(Result* other) {
 
 ::google::protobuf::Metadata Result::GetMetadata() const {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[4];
+  return protobuf_Smoke2d_2eproto::file_level_metadata[5];
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1233,7 +1414,7 @@ void DataChunk::SetCachedSize(int size) const {
 }
 const ::google::protobuf::Descriptor* DataChunk::descriptor() {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[5].descriptor;
+  return protobuf_Smoke2d_2eproto::file_level_metadata[6].descriptor;
 }
 
 const DataChunk& DataChunk::default_instance() {
@@ -1395,7 +1576,7 @@ void DataChunk::InternalSwap(DataChunk* other) {
 
 ::google::protobuf::Metadata DataChunk::GetMetadata() const {
   protobuf_Smoke2d_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_Smoke2d_2eproto::file_level_metadata[5];
+  return protobuf_Smoke2d_2eproto::file_level_metadata[6];
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
