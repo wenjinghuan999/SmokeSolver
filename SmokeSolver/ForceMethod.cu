@@ -37,7 +37,7 @@ namespace
 }
 
 template<typename FType>
-void ForceMethodSimple::operator()<FType>(
+void ForceMethodSimple::operator()(
 	Blob<FType>& fout, const Blob<T>& rh, const Blob<T>& tm
 	) const
 {

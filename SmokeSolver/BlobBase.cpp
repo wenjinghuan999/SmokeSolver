@@ -60,7 +60,7 @@ BlobBase &BlobBase::operator= (const BlobBase &other)
 		_DestroyCuda();
 		if (_data_cpu)
 		{
-			delete[] _data_cpu;
+			delete[] static_cast<byte *>(_data_cpu);
 			_data_cpu = nullptr;
 		}
 
@@ -101,7 +101,7 @@ BlobBase &BlobBase::operator= (BlobBase &&other)
 		_DestroyCuda();
 		if (_data_cpu)
 		{
-			delete[] _data_cpu;
+			delete[] static_cast<byte *>(_data_cpu);
 			_data_cpu = nullptr;
 		}
 
@@ -126,7 +126,7 @@ BlobBase::~BlobBase()
 
 	if (_data_cpu)
 	{
-		delete[] _data_cpu;
+		delete[] static_cast<byte *>(_data_cpu);
 		_data_cpu = nullptr;
 	}
 	_nx_in_bytes = 0;

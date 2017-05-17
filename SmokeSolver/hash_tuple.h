@@ -4,6 +4,7 @@
 #define __HASH_TUPLE_H__
 
 #include "common.h"
+#include <functional>
 #include <tuple>
 
 namespace ssv
@@ -65,11 +66,11 @@ namespace ssv
 			size_t operator()(cudaTextureDesc const& t) const
 			{
 				size_t seed = 0;
-				hash_combine(seed, t.addressMode[0]);
-				hash_combine(seed, t.addressMode[1]);
-				hash_combine(seed, t.addressMode[2]);
-				hash_combine(seed, t.filterMode);
-				hash_combine(seed, t.readMode);
+				hash_combine(seed, underlying(t.addressMode[0]));
+				hash_combine(seed, underlying(t.addressMode[1]));
+				hash_combine(seed, underlying(t.addressMode[2]));
+				hash_combine(seed, underlying(t.filterMode));
+				hash_combine(seed, underlying(t.readMode));
 				hash_combine(seed, t.sRGB);
 				hash_combine(seed, t.borderColor[0]);
 				hash_combine(seed, t.borderColor[1]);
@@ -77,7 +78,7 @@ namespace ssv
 				hash_combine(seed, t.borderColor[3]);
 				hash_combine(seed, t.normalizedCoords);
 				hash_combine(seed, t.maxAnisotropy);
-				hash_combine(seed, t.mipmapFilterMode);
+				hash_combine(seed, underlying(t.mipmapFilterMode));
 				hash_combine(seed, t.mipmapLevelBias);
 				hash_combine(seed, t.minMipmapLevelClamp);
 				hash_combine(seed, t.maxMipmapLevelClamp);
@@ -96,7 +97,7 @@ namespace ssv
 				hash_combine(seed, t.y);
 				hash_combine(seed, t.z);
 				hash_combine(seed, t.w);
-				hash_combine(seed, t.f);
+				hash_combine(seed, underlying(t.f));
 
 				return seed;
 			}

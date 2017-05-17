@@ -14,7 +14,7 @@ using namespace ssv;
 namespace
 {
 	const size_t DATA_CHUNK_SIZE = 65536u;
-
+    using ssv::error_t;
 	/// ================== CLIENT ======================
 
 	class Smoke2dClient

@@ -72,8 +72,8 @@ namespace ssv
 	};
 
 	template<typename OpType, 
-		typename QType = OpType::first_argument_type, 
-		typename TpType = OpType::second_argument_type>
+		typename QType = typename OpType::first_argument_type, 
+		typename TpType = typename OpType::second_argument_type>
 	inline BoundaryMethodAll<QType, TpType, OpType> make_boundary_method_all(OpType &&op)
 	{
 		return BoundaryMethodAll<QType, TpType, OpType>(std::forward<OpType>(op));

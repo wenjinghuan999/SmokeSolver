@@ -1,4 +1,3 @@
-#pragma once
 
 #include "common.cuh"
 #include "BlobMath.h"
@@ -185,7 +184,7 @@ template Blob<T4> &ssv::operator/=<T4>(Blob<T4> &, T4);
 template <typename _T>
 void ssv::neg(Blob<_T> &q)
 {
-	thrust::transform(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), -_1);
+	thrust::transform(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), thrust::negate<_T>());
 }
 
 template void ssv::neg<T>(Blob<T> &);

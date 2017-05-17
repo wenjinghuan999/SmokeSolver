@@ -46,7 +46,7 @@ namespace
 }
 
 template <typename QType>
-void AdvectMethodSemiLagrangian::operator()<QType>(
+void AdvectMethodSemiLagrangian::operator()(
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
 	) const
 {
@@ -63,7 +63,7 @@ template void AdvectMethodSemiLagrangian::operator()<T4>(
 	Blob<T4> &, const Blob<T4> &, const Blob<T2> &) const;
 
 template <typename QType>
-void AdvectMethodSemiLagrangian::operator()<QType>(
+void AdvectMethodSemiLagrangian::operator()(
 	Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
 	) const
 {

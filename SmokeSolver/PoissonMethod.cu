@@ -1,6 +1,7 @@
 
 #include "common.cuh"
 #include "PoissonMethod.h"
+#include <vector>
 using namespace ssv;
 
 namespace
@@ -185,7 +186,7 @@ namespace
 		qout(2u * x,		2u * y,			2u * z + 1u) = q;
 	}
 
-	typename BlobShape _NextShape(
+	BlobShape _NextShape(
 		const BlobShape &shape
 	)
 	{
