@@ -2,6 +2,9 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
+#include <chrono>
+#include <iomanip>
+#include <ctime>
 using namespace std;
 
 #include <grpc++/grpc++.h>
@@ -88,10 +91,19 @@ namespace
 	/// ================== SERVER ======================
 	class Smoke2dService final : public Smoke2d::Service
 	{
+		static void PrintTime()
+		{
+			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+			std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+			std::cout << "[" << std::put_time(std::localtime(&now_c), "%F %T") << "] ";
+		}
+
 		grpc::Status Init(grpc::ServerContext* context,
 			const Smoke2dInitParams* params,
 			Result* result) override
 		{
+			PrintTime();
+			std::cout << "Connected: " << context->peer() << std::endl;
 			result->set_status(0);
 			try
 			{
@@ -259,7 +271,15 @@ void Local(uint nx, uint ny) {
 
 int main()
 {
-	thread ts = thread(RunServer);
+	thread ts;
+	try
+	{
+		ts = thread(RunServer);
+	}
+	catch (...)
+	{
+		std::cerr << "Cannot start server!" << endl;
+	}
 
 	//Smoke2dClient client(grpc::CreateChannel(
 	//	"localhost:50077", grpc::InsecureChannelCredentials()));
