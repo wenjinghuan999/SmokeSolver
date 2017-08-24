@@ -221,8 +221,8 @@ namespace
 	};
 }
 
-void RunServer() {
-	std::string server_address("0.0.0.0:50077");
+void RunServer(int port) {
+	std::string server_address("0.0.0.0:" + std::to_string(port));
 	Smoke2dService smoke2d_service;
 
 	grpc::ServerBuilder builder;
@@ -269,12 +269,17 @@ void Local(uint nx, uint ny) {
 	solver.destory();
 }
 
-int main()
+int main(int argc, const char **argv)
 {
+	int port = 50077;
+	if (argc > 1)
+	{
+		port = std::stoi(argv[1]);
+	}
 	thread ts;
 	try
 	{
-		ts = thread(RunServer);
+		ts = thread(RunServer, port);
 	}
 	catch (...)
 	{
