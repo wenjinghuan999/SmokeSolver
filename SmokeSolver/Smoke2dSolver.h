@@ -97,6 +97,7 @@ namespace ssv
 		Blob<T> _temp1a, _temp1b;
 		Blob<T2> _temp2a, _temp2b;
 		int ping;
+		int get_data_ping;
 	};
 }
 

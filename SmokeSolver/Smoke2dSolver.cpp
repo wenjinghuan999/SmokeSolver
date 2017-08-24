@@ -35,6 +35,7 @@ void Smoke2dSolver::init()
 	_tp.syncCpu2Gpu();
 
 	ping = 0;
+	get_data_ping = 0;
 }
 
 void Smoke2dSolver::addSource(uint x0, uint x1, uint y0, uint y1)
@@ -55,14 +56,15 @@ void Smoke2dSolver::genNoise()
 	offset = make_T2(dis(gen), dis(gen));
 	simplex2d(_rh[ping], make_T2(16.f, 16.f), offset);
 	simplex2d(_tm[ping], make_T2(16.f, 16.f), offset);
+
+	get_data_ping = 0;
 }
 
 void *Smoke2dSolver::getData(size_t *size)
 {
-	static bool rh_or_u = 0;
-	if (rh_or_u == 0)
+	if (get_data_ping == 0)
 	{
-		rh_or_u ^= 1;
+		get_data_ping ^= 1;
 		if (size != nullptr)
 		{
 			*size = _rh[ping].size_cpu_in_bytes();
@@ -72,7 +74,7 @@ void *Smoke2dSolver::getData(size_t *size)
 	}
 	else
 	{
-		rh_or_u ^= 1;
+		get_data_ping ^= 1;
 		if (size != nullptr)
 		{
 			*size = _u.size_cpu_in_bytes();
