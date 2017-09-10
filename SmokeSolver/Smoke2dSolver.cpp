@@ -50,7 +50,10 @@ void Smoke2dSolver::genNoise()
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> dis(0.f, 32768.f);
 	T2 offset = make_T2(dis(gen), dis(gen));
-	simplex2d(_rh[ping], _temp1a, _temp1b, make_T2(4.f, 4.f), offset);
+	//simplex2d(_rh[ping], _temp1a, _temp1b, make_T2(4.f, 4.f), offset);
+	simplex2d(_temp1a, make_T2(16.f, 16.f), offset);
+	offset = make_T2(dis(gen), dis(gen));
+	simplex2d(_temp1b, make_T2(16.f, 16.f), offset);
 	zip(_u, _temp1a, _temp1b);
 
 	offset = make_T2(dis(gen), dis(gen));
