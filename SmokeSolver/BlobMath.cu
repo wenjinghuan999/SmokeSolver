@@ -191,6 +191,91 @@ template void ssv::neg<T>(Blob<T> &);
 
 namespace
 {
+	template <typename _T>
+	struct is_negtive
+	{
+		__host__ __device__
+			bool operator()(const _T &x)
+		{
+			return x < 0;
+		}
+	};
+}
+
+template <typename _T>
+void ssv::abs(Blob<_T> &q)
+{
+	thrust::transform_if(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), thrust::negate<_T>(), is_negtive<_T>());
+}
+
+template void ssv::abs<T>(Blob<T> &);
+
+namespace
+{
+	struct op_norm2
+	{
+		__host__ __device__
+			T operator()(const T2 &q)
+		{
+			return sqrt(q.x * q.x + q.y * q.y);
+		}
+	};
+
+	struct op_norm3
+	{
+		__host__ __device__
+			T operator()(const T4 &q)
+		{
+			return sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+		}
+	};
+}
+
+void ssv::norm(Blob<T> &n, const Blob<T2> &q)
+{
+	thrust::transform(q.begin_gpu(), q.end_gpu(), n.begin_gpu(), op_norm2());
+}
+
+void ssv::norm(Blob<T> &n, const Blob<T4> &q)
+{
+	thrust::transform(q.begin_gpu(), q.end_gpu(), n.begin_gpu(), op_norm3());
+}
+
+namespace
+{
+	struct op_normalize2
+	{
+		__host__ __device__
+			T2 operator()(const T2 &q)
+		{
+			T n = sqrt(q.x * q.x + q.y * q.y);
+			T2 a = q; a.x /= n; a.y /= n; return a;
+		}
+	};
+
+	struct op_normalize3
+	{
+		__host__ __device__
+			T4 operator()(const T4 &q)
+		{
+			T n = sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+			T4 a = q; a.x /= n; a.y /= n; a.z /= n; a.w = 1.0f; return a;
+		}
+	};
+}
+
+void ssv::normalize(Blob<T2> &q)
+{
+	thrust::transform(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), op_normalize2());
+}
+
+void ssv::normalize(Blob<T4> &q)
+{
+	thrust::transform(q.begin_gpu(), q.end_gpu(), q.begin_gpu(), op_normalize3());
+}
+
+namespace
+{
 	using ssv::uint;
 
 	// Zip
@@ -515,6 +600,86 @@ namespace
 {
 	using ssv::uint;
 
+	// Simple curl 2D
+	// LAUNCH : block (ny), thread (nx)
+	// d : nx x ny
+	// q : nx x ny
+	__global__ void kernelCurl2d(
+		BlobWrapper<T> c, BlobWrapperConst<T2> q
+	)
+	{
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		T qypx;
+		if (x == 0) qypx = q(x + 1u, y).y - q(x, y).y;
+		else if (x == q.nx - 1u) qypx = q(x, y).y - q(x - 1u, y).y;
+		else qypx = (q(x + 1u, y).y - q(x - 1u, y).y) / (T)(2);
+
+		T qxpy;
+		if (y == 0) qxpy = q(x, y + 1u).x - q(x, y).x;
+		else if (y == q.ny - 1u) qxpy = q(x, y).x - q(x, y - 1u).x;
+		else qxpy = (q(x, y + 1u).x - q(x, y - 1u).x) / (T)(2);
+
+		c(x, y) = qypx - qxpy;
+	}
+
+	// Simple curl 3D
+	// LAUNCH : block (ny, nz), thread (nx)
+	// d : nx x ny x nz
+	// q : nx x ny x nz
+	__global__ void kernelCurl3d(
+		BlobWrapper<T4> c, BlobWrapperConst<T4> q
+	)
+	{
+		uint z = blockIdx.y;
+		uint y = blockIdx.x;
+		uint x = threadIdx.x;
+
+		T4 qpx;
+		if (x == 0) qpx = q(x + 1u, y, z) - q(x, y, z);
+		else if (x == q.nx - 1u) qpx = q(x, y, z) - q(x - 1u, y, z);
+		else qpx = (q(x + 1u, y, z) - q(x - 1u, y, z)) / (T)(2);
+
+		T4 qpy;
+		if (y == 0) qpy = q(x, y + 1u, z) - q(x, y, z);
+		else if (y == q.ny - 1u) qpy = q(x, y, z) - q(x, y - 1u, z);
+		else qpy = (q(x, y + 1u, z) - q(x, y - 1u, z)) / (T)(2);
+
+		T4 qpz;
+		if (z == 0) qpz = q(x, y, z + 1u) - q(x, y, z);
+		else if (z == q.nz - 1u) qpz = q(x, y, z) - q(x, y, z - 1u);
+		else qpz = (q(x, y, z + 1u) - q(x, y, z - 1u)) / (T)(2);
+
+		T4 cc;
+		cc.x = qpy.z - qpz.y;
+		cc.y = qpz.x - qpx.z;
+		cc.z = qpx.y - qpy.x;
+		cc.w = 0;
+		c(x, y, z) = cc;
+	}
+}
+
+// Simple curl 2D
+void ssv::curl(Blob<T> &d, const Blob<T2> &q)
+{
+	kernelCurl2d<<<q.ny(), q.nx()>>>(
+		d.wrapper(), q.wrapper_const()
+		);
+}
+
+// Simple curl 3D
+void ssv::curl(Blob<T4> &d, const Blob<T4> &q)
+{
+	kernelCurl3d<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+		d.wrapper(), q.wrapper_const()
+		);
+}
+
+namespace
+{
+	using ssv::uint;
+
 	// Simple gradient 2D
 	// LAUNCH : block (ny), thread (nx)
 	// d : nx x ny
@@ -571,7 +736,7 @@ namespace
 // Simple gradient 2D
 void ssv::gradient(Blob<T2> &d, const Blob<T> &q)
 {
-	kernelGradient2d<<<q.ny(), q.nx()>>>(
+	kernelGradient2d << <q.ny(), q.nx() >> >(
 		d.wrapper(), q.wrapper_const()
 		);
 }
@@ -579,7 +744,7 @@ void ssv::gradient(Blob<T2> &d, const Blob<T> &q)
 // Simple gradient 3D
 void ssv::gradient(Blob<T4> &d, const Blob<T> &q)
 {
-	kernelGradient3d<<<dim3(q.ny(), q.nz()), q.nx()>>>(
+	kernelGradient3d << <dim3(q.ny(), q.nz()), q.nx() >> >(
 		d.wrapper(), q.wrapper_const()
 		);
 }

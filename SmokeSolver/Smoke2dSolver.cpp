@@ -22,6 +22,7 @@ void Smoke2dSolver::init()
 	_tm[0] = Blob<T>(_nx, _ny);
 	_tm[1] = Blob<T>(_nx, _ny);
 	_u = Blob<T2>(_nx, _ny);
+	_w = Blob<T>(_nx, _ny);
 	_f = Blob<T2>(_nx, _ny);
 	_temp1a = Blob<T>(_nx, _ny);
 	_temp1b = Blob<T>(_nx, _ny);
@@ -101,9 +102,11 @@ void Smoke2dSolver::step()
 	Blob<T> &rh = _rh[ping], &rh2 = _rh[ping ^ 1];
 	Blob<T> &tm = _tm[ping], &tm2 = _tm[ping ^ 1];
 	Blob<T2> &u = _u;
+	Blob<T> &w = _w;
 	Blob<T2> &f= _f;
-	Blob<T> &temp1 = _temp1a, &temp2 = _temp1b;
+	Blob<T> &temp1a = _temp1a, &temp1b = _temp1b;
 	Blob<T2> &u1 = _temp2a, &u2 = _temp2b;
+	Blob<T2> &eta = _temp2a;
 
 	//tp.syncGpu2Cpu(); output::PrintBlobCPU(tp, "tp");
 
@@ -121,6 +124,19 @@ void Smoke2dSolver::step()
 	_force(f, rh, tm);
 
 	//f.syncGpu2Cpu(); output::PrintBlobCPU(f, "f");
+	_euler2(u, f);
+
+	curl(w, u);
+	temp1a = w;
+	abs(temp1a);
+	gradient(eta, temp1a);
+	normalize(eta);
+	unzip(temp1a, temp1b, eta);
+	temp1a *= w;
+	neg(temp1a);
+	temp1b *= w;
+	zip(f, temp1b, temp1a);
+	f *= make_T2(0.2f, 0.2f);
 
 	_euler2(u, f);
 
@@ -130,13 +146,13 @@ void Smoke2dSolver::step()
 	u1 *= make_T2(0.2f, 0.2f);
 	_euler2(u, u1);
 
-	laplacian2d(temp1, rh);
-	temp1 *= 0.01f;
-	_euler(rh, temp1);
+	laplacian2d(temp1a, rh);
+	temp1a *= 0.01f;
+	_euler(rh, temp1a);
 
-	laplacian2d(temp1, tm);
-	temp1 *= 0.01f;
-	_euler(tm, temp1);
+	laplacian2d(temp1a, tm);
+	temp1a *= 0.01f;
+	_euler(tm, temp1a);
 
 	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
@@ -148,9 +164,9 @@ void Smoke2dSolver::step()
 	//tm2.syncGpu2Cpu(); output::PrintBlobCPU(tm2, "tm");
 	//u1.syncGpu2Cpu(); output::PrintBlobCPU(u1, "u1");
 
-	divergence(temp1, u1);
-	_poisson(temp2, temp1);
-	gradient(u2, temp2);
+	divergence(temp1a, u1);
+	_poisson(temp1b, temp1a);
+	gradient(u2, temp1b);
 
 	sub(u, u1, u2);
 

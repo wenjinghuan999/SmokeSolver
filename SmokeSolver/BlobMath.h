@@ -53,6 +53,18 @@ namespace ssv
 	template <typename _T>
 	void neg(Blob<_T> &q);
 
+	// Element-wise abs
+	template <typename _T>
+	void abs(Blob<_T> &q);
+
+	// Element-wise norm
+	void norm(Blob<T> &n, const Blob<T2> &q);
+	void norm(Blob<T> &n, const Blob<T4> &q);
+
+	// Element-wise normalize
+	void normalize(Blob<T2> &q);
+	void normalize(Blob<T4> &q);
+
 	// Element-wise zip
 	// qout(:).x = qx(:), qout(:).y = qy(:)
 	void zip(Blob<T2> &qout, const Blob<T> &qx, const Blob<T> &qy);
@@ -64,7 +76,6 @@ namespace ssv
 	void unzip(Blob<T> &qxout, Blob<T> &qyout, const Blob<T2> &q);
 	void unzip(Blob<T> &qxout, Blob<T> &qyout, Blob<T> &qzout, const Blob<T4> &q);
 	void unzip(Blob<T> &qxout, Blob<T> &qyout, Blob<T> &qzout, Blob<T> &qwout, const Blob<T4> &q);
-
 
 	// Partial difference by x
 	template <typename _T>
@@ -80,6 +91,10 @@ namespace ssv
 	void divergence(Blob<T> &d, const Blob<T2> &q);
 	// Divergence 3D
 	void divergence(Blob<T> &d, const Blob<T4> &q);
+	// Curl 2D
+	void curl(Blob<T>& d, const Blob<T2>& q);
+	// Curl 3D
+	void curl(Blob<T4>& d, const Blob<T4>& q);
 	// Gradient 2D
 	void gradient(Blob<T2> &d, const Blob<T> &q);
 	// Gradient 3D

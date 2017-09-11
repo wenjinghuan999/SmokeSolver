@@ -93,6 +93,7 @@ namespace ssv
 		Blob<T> _rh[2];
 		Blob<T> _tm[2];
 		Blob<T2> _u;
+		Blob<T> _w;
 		Blob<T2> _f;
 		Blob<T> _temp1a, _temp1b;
 		Blob<T2> _temp2a, _temp2b;
