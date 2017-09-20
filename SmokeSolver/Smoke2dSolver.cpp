@@ -136,7 +136,7 @@ void Smoke2dSolver::step()
 	neg(temp1a);
 	temp1b *= w;
 	zip(f, temp1b, temp1a);
-	f *= make_T2(0.2f, 0.2f);
+	f *= make_T2(1.2f, 1.2f);
 
 	_euler2(u, f);
 
