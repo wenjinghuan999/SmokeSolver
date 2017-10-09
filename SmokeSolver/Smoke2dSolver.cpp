@@ -126,19 +126,19 @@ void Smoke2dSolver::step()
 	//f.syncGpu2Cpu(); output::PrintBlobCPU(f, "f");
 	_euler2(u, f);
 
-	curl(w, u);
-	temp1a = w;
-	abs(temp1a);
-	gradient(eta, temp1a);
-	normalize(eta);
-	unzip(temp1a, temp1b, eta);
-	temp1a *= w;
-	neg(temp1a);
-	temp1b *= w;
-	zip(f, temp1b, temp1a);
-	f *= make_T2(1.2f, 1.2f);
+	//curl(w, u);
+	//temp1a = w;
+	//abs(temp1a);
+	//gradient(eta, temp1a);
+	//normalize(eta);
+	//unzip(temp1a, temp1b, eta);
+	//temp1a *= w;
+	//neg(temp1a);
+	//temp1b *= w;
+	//zip(f, temp1b, temp1a);
+	//f *= make_T2(1.2f, 1.2f);
 
-	_euler2(u, f);
+	//_euler2(u, f);
 
 	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
 
