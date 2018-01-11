@@ -7,35 +7,37 @@
 #include <cuda_runtime.h>
 #include <google/protobuf/stubs/common.h>
 #include <glm/glm.hpp>
+#include <exception>
 
 #include <type_traits>
 
 
 namespace ssv
 {
-	typedef float T;
-	typedef float2 T2;
-	typedef float3 T3;
-	typedef float4 T4;
-	typedef ::google::protobuf::uint8 byte;
-	typedef ::google::protobuf::uint uint;
+	typedef float real;
+	typedef float2 real2;
+	typedef float3 real3;
+	typedef float4 real4;
+	typedef google::protobuf::uint8 byte;
+	typedef google::protobuf::uint uint;
 
 	template <typename ...Types>
-	inline __host__ __device__ T2 make_T2(Types ...Args)
+	__host__ __device__ real2 make_real2(Types ...args)
 	{
-		return make_float2(std::forward<Types>(Args)...);
-	}
-	template <typename ...Types>
-	inline __host__ __device__ T3 make_T3(Types ...Args)
-	{
-		return make_float3(std::forward<Types>(Args)...);
-	}
-	template <typename ...Types>
-	inline __host__ __device__ T4 make_T4(Types ...Args)
-	{
-		return make_float4(std::forward<Types>(Args)...);
+		return make_float2(std::forward<Types>(args)...);
 	}
 
+	template <typename ...Types>
+	__host__ __device__ real3 make_real3(Types ...args)
+	{
+		return make_float3(std::forward<Types>(args)...);
+	}
+
+	template <typename ...Types>
+	__host__ __device__ real4 make_real4(Types ...args)
+	{
+		return make_float4(std::forward<Types>(args)...);
+	}
 
 	enum class error_t : unsigned int
 	{
@@ -49,7 +51,43 @@ namespace ssv
 		SSV_ERROR_UNKNOWN = 7999
 	};
 
-	template<typename EnumType>
+	class ssv_error
+		: public std::exception
+	{
+		// base of all out-of-range exceptions
+	public:
+		typedef std::exception mybase_t;
+
+		explicit ssv_error(error_t err, const std::string &what_arg)
+			: mybase_t(what_arg.c_str()), err(err)
+		{
+		}
+
+		explicit ssv_error(error_t err, const char *what_arg)
+			: mybase_t(what_arg), err(err)
+		{
+		}
+
+		explicit ssv_error(error_t err)
+			: err(err)
+		{
+		}
+
+	public:
+		error_t err;
+
+#if _HAS_EXCEPTIONS
+
+#else /* _HAS_EXCEPTIONS */
+	protected:
+		virtual void _Doraise() const
+		{	// perform class-specific exception handling
+			_RAISE(*this);
+		}
+#endif /* _HAS_EXCEPTIONS */
+	};
+
+	template <typename EnumType>
 	constexpr typename std::underlying_type<EnumType>::type underlying(EnumType e)
 	{
 		return static_cast<typename std::underlying_type<EnumType>::type>(e);

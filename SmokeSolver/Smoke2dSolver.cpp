@@ -1,184 +1,152 @@
-
 #include "Smoke2dSolver.h"
 #include "BlobMath.h"
 #include "debug_output.h"
 using namespace ssv;
 
-#include <fstream>
-#include <sstream>
 #include <random>
 
 
-void Smoke2dSolver::init()
+void Smoke2DSolver::init()
 {
-	if (_nx == 0 || _ny == 0)
+	if (nx_ == 0 || ny_ == 0)
 	{
-		throw error_t::SSV_ERROR_NOT_INITIALIZED;
+		throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
 	}
 
-	_tp = Blob<byte>(_nx, _ny);
-	_rh[0] = Blob<T>(_nx, _ny);
-	_rh[1] = Blob<T>(_nx, _ny);
-	_tm[0] = Blob<T>(_nx, _ny);
-	_tm[1] = Blob<T>(_nx, _ny);
-	_u = Blob<T2>(_nx, _ny);
-	_w = Blob<T>(_nx, _ny);
-	_f = Blob<T2>(_nx, _ny);
-	_temp1a = Blob<T>(_nx, _ny);
-	_temp1b = Blob<T>(_nx, _ny);
-	_temp2a = Blob<T2>(_nx, _ny);
-	_temp2b = Blob<T2>(_nx, _ny);
+	tp_ = Blob<byte>(nx_, ny_);
+	rh_[0] = Blob<real>(nx_, ny_);
+	rh_[1] = Blob<real>(nx_, ny_);
+	tm_[0] = Blob<real>(nx_, ny_);
+	tm_[1] = Blob<real>(nx_, ny_);
+	u_ = Blob<real2>(nx_, ny_);
+	w_ = Blob<real>(nx_, ny_);
+	f_ = Blob<real2>(nx_, ny_);
+	temp1_a_ = Blob<real>(nx_, ny_);
+	temp1_b_ = Blob<real>(nx_, ny_);
+	temp2_c_ = Blob<real2>(nx_, ny_);
+	temp2_d_ = Blob<real2>(nx_, ny_);
 
-	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), 0, 0, 0, _ny - 1u);
-	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), _nx - 1u, _nx - 1u, 0, _ny - 1u);
-	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), 0, _nx - 1u, 0, 0);
-	_tp.setDataCubeCpu(underlying(CellType::CellTypeWall), 0, _nx - 1u, _ny - 1u, _ny - 1u);
-	_tp.syncCpu2Gpu();
+	tp_.set_data_cube_cpu(underlying(CellType::CELL_TYPE_WALL), 0, 0, 0, ny_ - 1u);
+	tp_.set_data_cube_cpu(underlying(CellType::CELL_TYPE_WALL), nx_ - 1u, nx_ - 1u, 0, ny_ - 1u);
+	tp_.set_data_cube_cpu(underlying(CellType::CELL_TYPE_WALL), 0, nx_ - 1u, 0, 0);
+	tp_.set_data_cube_cpu(underlying(CellType::CELL_TYPE_WALL), 0, nx_ - 1u, ny_ - 1u, ny_ - 1u);
+	tp_.sync_cpu_to_gpu();
 
-	ping = 0;
-	get_data_ping = 0;
+	ping_ = 0;
+	get_data_ping_ = 0;
 }
 
-void Smoke2dSolver::addSource(uint x0, uint x1, uint y0, uint y1)
+void Smoke2DSolver::add_source(uint x0, uint x1, uint y0, uint y1)
 {
-	_tp.setDataCubeCpu(underlying(CellType::CellTypeSource), x0, x1, y0, y1);
-	_tp.syncCpu2Gpu();
+	tp_.set_data_cube_cpu(underlying(CellType::CELL_TYPE_SOURCE), x0, x1, y0, y1);
+	tp_.sync_cpu_to_gpu();
 }
 
-void Smoke2dSolver::genNoise()
+void Smoke2DSolver::gen_noise()
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> dis(0.f, 32768.f);
-	T2 offset = make_T2(dis(gen), dis(gen));
-	//simplex2d(_rh[ping], _temp1a, _temp1b, make_T2(4.f, 4.f), offset);
-	simplex2d(_temp1a, make_T2(16.f, 16.f), offset);
-	offset = make_T2(dis(gen), dis(gen));
-	simplex2d(_temp1b, make_T2(16.f, 16.f), offset);
-	zip(_u, _temp1a, _temp1b);
+	real2 offset = make_real2(dis(gen), dis(gen));
+	//simplex_2d(_rh[ping], _temp1a, _temp1b, make_real2(4.f, 4.f), offset);
+	simplex_2d(temp1_a_, make_real2(16.f, 16.f), offset);
+	offset = make_real2(dis(gen), dis(gen));
+	simplex_2d(temp1_b_, make_real2(16.f, 16.f), offset);
+	zip(u_, temp1_a_, temp1_b_);
 
-	offset = make_T2(dis(gen), dis(gen));
-	simplex2d(_rh[ping], make_T2(16.f, 16.f), offset);
-	simplex2d(_tm[ping], make_T2(16.f, 16.f), offset);
+	offset = make_real2(dis(gen), dis(gen));
+	simplex_2d(rh_[ping_], make_real2(16.f, 16.f), offset);
+	simplex_2d(tm_[ping_], make_real2(16.f, 16.f), offset);
 
-	get_data_ping = 0;
+	get_data_ping_ = 0;
 }
 
-void *Smoke2dSolver::getData(size_t *size)
+void *Smoke2DSolver::get_data(size_t *size)
 {
-	if (get_data_ping == 0)
+	if (get_data_ping_ == 0)
 	{
-		get_data_ping ^= 1;
+		get_data_ping_ ^= 1;
 		if (size != nullptr)
 		{
-			*size = _rh[ping].size_cpu_in_bytes();
+			*size = rh_[ping_].size_cpu_in_bytes();
 		}
-		_rh[ping].syncGpu2Cpu();
-		return _rh[ping].data_cpu();
+		rh_[ping_].sync_gpu_to_cpu();
+		return rh_[ping_].data_cpu();
 	}
-	else
+	get_data_ping_ ^= 1;
+	if (size != nullptr)
 	{
-		get_data_ping ^= 1;
-		if (size != nullptr)
-		{
-			*size = _u.size_cpu_in_bytes();
-		}
-		_u.syncGpu2Cpu();
-		return _u.data_cpu();
+		*size = u_.size_cpu_in_bytes();
 	}
+	u_.sync_gpu_to_cpu();
+	return u_.data_cpu();
 }
 
-void Smoke2dSolver::saveData(const std::string &filename)
+void Smoke2DSolver::save_data(const std::string &filename)
 {
-	_rh[ping].syncGpu2Cpu();
-	output::SaveBlobCPU(_rh[ping], filename + "_rh");
-	_u.syncGpu2Cpu();
-	output::SaveBlobCPU(_u, filename + "_u");
+	rh_[ping_].sync_gpu_to_cpu();
+	output::save_blob_cpu(rh_[ping_], filename + "_rh");
+	u_.sync_gpu_to_cpu();
+	output::save_blob_cpu(u_, filename + "_u");
 }
 
-void Smoke2dSolver::step()
+void Smoke2DSolver::step()
 {
-	Blob<byte> &tp = _tp;
-	Blob<T> &rh = _rh[ping], &rh2 = _rh[ping ^ 1];
-	Blob<T> &tm = _tm[ping], &tm2 = _tm[ping ^ 1];
-	Blob<T2> &u = _u;
-	Blob<T> &w = _w;
-	Blob<T2> &f= _f;
-	Blob<T> &temp1a = _temp1a, &temp1b = _temp1b;
-	Blob<T2> &u1 = _temp2a, &u2 = _temp2b;
-	Blob<T2> &eta = _temp2a;
+	Blob<byte> &tp = tp_;
+	Blob<real> &rh = rh_[ping_], &rh2 = rh_[ping_ ^ 1];
+	Blob<real> &tm = tm_[ping_], &tm2 = tm_[ping_ ^ 1];
+	Blob<real2> &u = u_;
+	Blob<real> &w = w_;
+	Blob<real2> &f = f_;
+	Blob<real> &temp1_a = temp1_a_, &temp1_b = temp1_b_;
+	Blob<real2> &u1 = temp2_c_, &u2 = temp2_d_;
+	Blob<real2> &eta = temp2_c_;
 
-	//tp.syncGpu2Cpu(); output::PrintBlobCPU(tp, "tp");
+	boundary_den_(rh, tp);
+	boundary_den_(tm, tp);
+	boundary_vel_(u, tp);
 
-	_boundary(rh, tp);
-	_boundary(tm, tp);
-	_boundary2(u, tp);
-
-	//static int frame_no = 0;
-	//std::stringstream ss;
-	//ss << "data/" << frame_no << ".txt";
-	//std::ofstream fout(ss.str());
-	//frame_no++;
-	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
-
-	_force(f, rh, tm);
-
-	//f.syncGpu2Cpu(); output::PrintBlobCPU(f, "f");
-	_euler2(u, f);
+	force_(f, rh, tm);
+	euler_vel_(u, f);
 
 	curl(w, u);
-	temp1a = w;
-	abs(temp1a);
-	gradient(eta, temp1a);
+	temp1_a = w;
+	abs(temp1_a);
+	gradient(eta, temp1_a);
 	normalize(eta);
-	unzip(temp1a, temp1b, eta);
-	temp1a *= w;
-	neg(temp1a);
-	temp1b *= w;
-	zip(f, temp1b, temp1a);
-	f *= make_T2(1.2f, 1.2f);
+	unzip(temp1_a, temp1_b, eta);
+	temp1_a *= w;
+	neg(temp1_a);
+	temp1_b *= w;
+	zip(f, temp1_b, temp1_a);
+	f *= make_real2(1.2f, 1.2f);
 
-	_euler2(u, f);
+	euler_vel_(u, f);
 
-	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
+	laplacian_2d(u1, u);
+	u1 *= make_real2(0.2f, 0.2f);
+	euler_vel_(u, u1);
 
-	laplacian2d(u1, u);
-	u1 *= make_T2(0.2f, 0.2f);
-	_euler2(u, u1);
+	laplacian_2d(temp1_a, rh);
+	temp1_a *= 0.01f;
+	euler_den_(rh, temp1_a);
 
-	laplacian2d(temp1a, rh);
-	temp1a *= 0.01f;
-	_euler(rh, temp1a);
+	laplacian_2d(temp1_a, tm);
+	temp1_a *= 0.01f;
+	euler_den_(tm, temp1_a);
 
-	laplacian2d(temp1a, tm);
-	temp1a *= 0.01f;
-	_euler(tm, temp1a);
+	advect_den_(rh2, rh, u);
+	advect_den_(tm2, tm, u);
+	advect_vel_(u1, u, u);
 
-	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
-
-	_advect(rh2, rh, u);
-	_advect(tm2, tm, u);
-	_advect2(u1, u, u);
-
-	//rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
-	//tm2.syncGpu2Cpu(); output::PrintBlobCPU(tm2, "tm");
-	//u1.syncGpu2Cpu(); output::PrintBlobCPU(u1, "u1");
-
-	divergence(temp1a, u1);
-	_poisson(temp1b, temp1a);
-	gradient(u2, temp1b);
+	divergence(temp1_a, u1);
+	poisson_(temp1_b, temp1_a);
+	gradient(u2, temp1_b);
 
 	sub(u, u1, u2);
-
-	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
-
-	//std::cout << "rh size = " << rh2.size_cpu_in_bytes() << std::endl;
-	//rh2.syncGpu2Cpu(); output::PrintBlobCPU(rh2, "rh");
-
-	ping ^= 1;
+	ping_ ^= 1;
 }
 
-void Smoke2dSolver::destory()
+void Smoke2DSolver::destory()
 {
-
 }

@@ -14,22 +14,25 @@ namespace ssv
 	{
 	public:
 		template <typename FType>
-		using type = std::function<void(Blob<FType> &, const Blob<T> &, const Blob<T> &)>;
+		using type = std::function<void(Blob<FType> &, const Blob<real> &, const Blob<real> &)>;
 	};
 
 	// Calculate force according to density(rh) and temperature(tm)
 	class ForceMethodSimple : public ForceMethod
 	{
 	public:
-		ForceMethodSimple(T alpha, T beta, T tm0)
-			: _alpha(alpha), _beta(beta), _tm0(tm0) {}
+		ForceMethodSimple(real alpha, real beta, real tm0)
+			: alpha_(alpha), beta_(beta), tm0_(tm0)
+		{
+		}
+
 	public:
 		template <typename FType>
-		void operator() (
-			Blob<FType> &fout, const Blob<T> &rh, const Blob<T> &tm
-			) const;
+		void operator()(
+			Blob<FType> &fout, const Blob<real> &rh, const Blob<real> &tm
+		) const;
 	private:
-		T _alpha, _beta, _tm0;
+		real alpha_, beta_, tm0_;
 	};
 }
 

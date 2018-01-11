@@ -26,7 +26,7 @@ namespace ssv
 		template <typename QType>
 		void operator()(
 			Blob<QType> &q, const Blob<QType> &d
-			) const;
+		) const;
 	};
 }
 

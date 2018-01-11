@@ -1,6 +1,4 @@
-
 #include <iostream>
-#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <iomanip>
@@ -10,21 +8,22 @@ using namespace std;
 #include <grpc++/grpc++.h>
 #include "Smoke2d.grpc.pb.h"
 
-#include "debug_output.h"
 #include "Smoke2dSolver.h"
 using namespace ssv;
 
 namespace
 {
 	const size_t DATA_CHUNK_SIZE = 65536u;
-    using ssv::error_t;
+
 	/// ================== CLIENT ======================
 
-	class Smoke2dClient
+	class Smoke2DClient
 	{
 	public:
-		Smoke2dClient(std::shared_ptr<grpc::Channel> channel)
-			: stub_(Smoke2d::NewStub(channel)) {}
+		explicit Smoke2DClient(const std::shared_ptr<grpc::Channel> &channel)
+			: stub_(Smoke2d::NewStub(channel))
+		{
+		}
 
 		void init(uint nx, uint ny)
 		{
@@ -36,7 +35,7 @@ namespace
 			grpc::ClientContext context;
 			stub_->Init(&context, params, &result);
 
-			PrintGrpcError("init", result.status());
+			_PrintGrpcError("init", result.status());
 		}
 
 		void step()
@@ -47,7 +46,7 @@ namespace
 			grpc::ClientContext context;
 			grpc::Status status = stub_->Step(&context, params, &result);
 
-			PrintGrpcError("step", result.status());
+			_PrintGrpcError("step", result.status());
 		}
 
 		void destroy()
@@ -58,10 +57,10 @@ namespace
 			grpc::ClientContext context;
 			grpc::Status status = stub_->Destroy(&context, params, &result);
 
-			PrintGrpcError("destroy", result.status());
+			_PrintGrpcError("destroy", result.status());
 		}
 
-		size_t getData(void *data_buffer)
+		size_t get_data(void *data_buffer) const
 		{
 			Smoke2dGetDataParams params;
 			grpc::ClientContext context;
@@ -80,17 +79,19 @@ namespace
 		}
 
 	private:
-		void PrintGrpcError(const std::string &func_name, uint status) const
+		static void _PrintGrpcError(const std::string &func_name, uint status)
 		{
-			std::cout << "Function " << func_name << " returned with status " << status	<< std::endl;
+			std::cout << "Function " << func_name << " returned with status " << status << std::endl;
 		}
+
 	private:
 		std::unique_ptr<Smoke2d::Stub> stub_;
 	};
 
 	/// ================== SERVER ======================
-	class Smoke2dService final : public Smoke2d::Service
+	class Smoke2DService final : public Smoke2d::Service
 	{
+	public:
 		static void PrintTime()
 		{
 			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -98,105 +99,112 @@ namespace
 			std::cout << "[" << std::put_time(std::localtime(&now_c), "%F %T") << "] ";
 		}
 
-		grpc::Status Init(grpc::ServerContext* context,
-			const Smoke2dInitParams* params,
-			Result* result) override
+		grpc::Status Init(grpc::ServerContext *context,
+		                  const Smoke2dInitParams *params,
+		                  Result *result) override
 		{
 			PrintTime();
 			std::cout << "Connected: " << context->peer() << std::endl;
 			result->set_status(0);
 			try
 			{
-				solver.setSize(params->nx(), params->ny());
-				solver.setAdvectMethod(AdvectMethodSemiLagrangian());
-				solver.setEulerMethod(EulerMethodForward());
+				solver_.set_size(params->nx(), params->ny());
+				solver_.set_advect(AdvectMethodSemiLagrangian());
+				solver_.set_euler(EulerMethodForward());
 				// solver.setPoissonMethod(PoissonMethodVCycle(3, 700, 0.4));
-				solver.setPoissonMethod(PoissonMethodCG(100));
-				solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp2<T, byte>{
-					0, underlying(Smoke2dSolver::CellType::CellTypeWall),
-					1.f, underlying(Smoke2dSolver::CellType::CellTypeSource)
-				}));
-				solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp2<T2, byte>{
-					make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
-					make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeSource)
-				}));
-				solver.setForceMethod(ForceMethodSimple(0.0015f, 0.125f, 0.f));
+				solver_.set_poisson(PoissonMethodCG(100));
+				solver_.set_boundary_density(make_boundary_all(make_boundary_op_clamp(
+					Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f
+				)));
+				solver_.set_boundary_density(make_boundary_all(make_boundary_op_clamp2(
+					Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f, 
+					Smoke2DSolver::CellType::CELL_TYPE_SOURCE, 1.f
+				)));
+				solver_.set_boundary_velocity(make_boundary_all(make_boundary_op_clamp2(
+					Smoke2DSolver::CellType::CELL_TYPE_WALL, make_real2(0.f, 0.f), 
+					Smoke2DSolver::CellType::CELL_TYPE_SOURCE, make_real2(0.f, 0.f)
+				)));
+				solver_.set_force(ForceMethodSimple(0.0015f, 0.125f, 0.f));
 
-				solver.init();
-				solver.genNoise();
-				//solver.addSource(params->nx()/2-2, params->nx()/2+1, 0, 2);
+				solver_.init();
+				solver_.gen_noise();
+				//solver.add_source(params->nx()/2-2, params->nx()/2+1, 0, 2);
 			}
-			catch (error_t e)
+			catch (ssv_error &e)
 			{
-				result->set_status(underlying(e));
+				result->set_status(underlying(e.err));
 				return grpc::Status::CANCELLED;
 			}
 
 			return grpc::Status::OK;
 		}
-		grpc::Status Step(grpc::ServerContext* context,
-			const Smoke2dStepParams* params,
-			Result* result) override
+
+		grpc::Status Step(grpc::ServerContext *context,
+		                  const Smoke2dStepParams *params,
+		                  Result *result) override
 		{
 			result->set_status(0);
 			try
 			{
-				solver.step();
+				solver_.step();
 			}
-			catch (error_t e)
+			catch (ssv_error &e)
 			{
-				result->set_status(underlying(e));
+				result->set_status(underlying(e.err));
 				return grpc::Status::CANCELLED;
 			}
 
 			return grpc::Status::OK;
 		}
-		grpc::Status Reset(grpc::ServerContext* context,
-			const Smoke2dResetParams* params,
-			Result* result) override
+
+		grpc::Status Reset(grpc::ServerContext *context,
+		                   const Smoke2dResetParams *params,
+		                   Result *result) override
 		{
 			result->set_status(0);
 			try
 			{
-				solver.genNoise();
+				solver_.gen_noise();
 			}
-			catch (error_t e)
+			catch (ssv_error &e)
 			{
-				result->set_status(underlying(e));
+				result->set_status(underlying(e.err));
 				return grpc::Status::CANCELLED;
 			}
 
 			return grpc::Status::OK;
 		}
-		grpc::Status Destroy(grpc::ServerContext* context,
-			const Smoke2dDestroyParams* params,
-			Result* result) override
+
+		grpc::Status Destroy(grpc::ServerContext *context,
+		                     const Smoke2dDestroyParams *params,
+		                     Result *result) override
 		{
 			result->set_status(0);
 			try
 			{
-				solver.destory();
+				solver_.destory();
 			}
-			catch (error_t e)
+			catch (ssv_error &e)
 			{
-				result->set_status(underlying(e));
+				result->set_status(underlying(e.err));
 				return grpc::Status::CANCELLED;
 			}
 
 			return grpc::Status::OK;
 		}
-		grpc::Status GetData(grpc::ServerContext* context,
-			const Smoke2dGetDataParams* params,
-			grpc::ServerWriter<DataChunk>* writer) override
+
+		grpc::Status GetData(grpc::ServerContext *context,
+		                     const Smoke2dGetDataParams *params,
+		                     grpc::ServerWriter<DataChunk> *writer) override
 		{
 			DataChunk chunk;
 			size_t size;
 			byte *data = nullptr;
 			try
 			{
-				data = static_cast<byte *>(solver.getData(&size));
+				data = static_cast<byte *>(solver_.get_data(&size));
 			}
-			catch (error_t e)
+			catch (ssv_error &e)
 			{
 				return grpc::Status::CANCELLED;
 			}
@@ -216,18 +224,20 @@ namespace
 
 			return grpc::Status::OK;
 		}
+
 	private:
-		Smoke2dSolver solver;
+		Smoke2DSolver solver_;
 	};
 }
 
-void RunServer(int port) {
+void run_server(int port)
+{
 	std::string server_address("0.0.0.0:" + std::to_string(port));
-	Smoke2dService smoke2d_service;
+	Smoke2DService service;
 
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-	builder.RegisterService(&smoke2d_service);
+	builder.RegisterService(&service);
 	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
 	std::cout << "Server listening on " << server_address << std::endl;
 
@@ -236,34 +246,35 @@ void RunServer(int port) {
 
 /// =================================================
 
-void Local(uint nx, uint ny) {
-	Smoke2dSolver solver;
+void local(uint nx, uint ny)
+{
+	Smoke2DSolver solver;
 
-	solver.setSize(nx, ny);
-	solver.setAdvectMethod(AdvectMethodSemiLagrangian());
-	solver.setEulerMethod(EulerMethodForward());
+	solver.set_size(nx, ny);
+	solver.set_advect(AdvectMethodSemiLagrangian());
+	solver.set_euler(EulerMethodForward());
 	// solver.setPoissonMethod(PoissonMethodVCycle(3, 700, 0.4));
-	solver.setPoissonMethod(PoissonMethodCG(100));
-	solver.setBoundaryMethod(make_boundary_method_all(BoundaryOpClamp2<T, byte>{
-		0, underlying(Smoke2dSolver::CellType::CellTypeWall),
-			1.f, underlying(Smoke2dSolver::CellType::CellTypeSource)
-	}));
-	solver.setBoundary2Method(make_boundary_method_all(BoundaryOpClamp2<T2, byte>{
-		make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeWall),
-			make_T2(0.f, 0.f), underlying(Smoke2dSolver::CellType::CellTypeSource)
-	}));
-	solver.setForceMethod(ForceMethodSimple(0.0015f, 0.125f, 0.f));
+	solver.set_poisson(PoissonMethodCG(100));
+	solver.set_boundary_density(make_boundary_all(make_boundary_op_clamp2(
+		Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f, 
+		Smoke2DSolver::CellType::CELL_TYPE_SOURCE, 1.f
+	)));
+	solver.set_boundary_velocity(make_boundary_all(make_boundary_op_clamp2(
+		Smoke2DSolver::CellType::CELL_TYPE_WALL, make_real2(0.f, 0.f), 
+		Smoke2DSolver::CellType::CELL_TYPE_SOURCE, make_real2(0.f, 0.f)
+	)));
+	solver.set_force(ForceMethodSimple(0.0015f, 0.125f, 0.f));
 
 	solver.init();
-	solver.genNoise();
+	solver.gen_noise();
 
 	int frame = 0;
 	while (frame < 50000)
 	{
 		std::cout << frame << std::endl;
-		solver.saveData("data/" + std::to_string(frame));
+		solver.save_data("data/" + std::to_string(frame));
 		frame++;
-		if (frame % 100 == 0) solver.genNoise();
+		if (frame % 100 == 0) solver.gen_noise();
 		else solver.step();
 	}
 	solver.destory();
@@ -279,7 +290,7 @@ int main(int argc, const char **argv)
 	thread ts;
 	try
 	{
-		ts = thread(RunServer, port);
+		ts = thread(run_server, port);
 	}
 	catch (...)
 	{
@@ -290,14 +301,14 @@ int main(int argc, const char **argv)
 	//	"localhost:50077", grpc::InsecureChannelCredentials()));
 	//client.init(16, 16);
 	//client.step();
-	//T *data_client = new T[16*16];
+	//real *data_client = new real[16*16];
 	//size_t size = client.getData(data_client);
 	//std::cout << "Client received data: " << size << std::endl;
 	//output::PrintRawCPU(data_client, 16 * 16, "data_client");
 
 	ts.join();
-	
-	//Local(64, 64);
+
+	//local(64, 64);
 
 	return 0;
 }

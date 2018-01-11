@@ -10,164 +10,164 @@
 
 namespace ssv
 {
-	typedef std::tuple<uint, uint, uint> BlobShape;
+	typedef std::tuple<uint, uint, uint> blob_shape_t;
 
 	// Base class of Blob
 	class BlobBase
 	{
 	public:
-		typedef BlobShape shape_t;
+		typedef blob_shape_t shape_t;
+
 		enum class storage_t : unsigned char
 		{
 			CPU = 1,
 			GPU = 2,
-			Both = 3
+			BOTH = 3
 		};
 
 	public:
-		BlobBase();
-		// nx: size in bytes
-		// ny, nz: size in elements
-		// gpu_device: cuda device id for underlying storage
-		// cpu_copy: if true, copying from and to CPU is enabled
+		/**
+		 * \brief Construct and allocate memory
+		 * \param nx_in_bytes size in bytes
+		 * \param ny size in elements
+		 * \param nz size in elements
+		 * \param gpu_device cuda device id for underlying storage
+		 * \param storage if true, copying from and to CPU is enabled
+		 */
 		BlobBase(size_t nx_in_bytes, uint ny, uint nz = 1u,
-			int gpu_device = 0, storage_t storage = storage_t::Both);
+		         int gpu_device = 0, storage_t storage = storage_t::BOTH);
 		BlobBase(const BlobBase &other);
-		BlobBase &operator= (const BlobBase &other);
-		BlobBase(BlobBase &&other);
-		BlobBase &operator= (BlobBase &&other);
+		BlobBase &operator=(const BlobBase &other);
+		BlobBase(BlobBase &&other) noexcept;
+		BlobBase &operator=(BlobBase &&other) noexcept;
+	protected:
+		BlobBase();
 		~BlobBase();
 
 	public:
-		// Sync data from GPU to CPU
-		void syncGpu2Cpu();
+		/**
+		 * \brief Sync data from GPU to CPU
+		 */
+		void sync_gpu_to_cpu();
 
-		// Sync data from CPU to GPU
-		void syncCpu2Gpu();
+		/**
+		 * \brief Sync data from CPU to GPU
+		 */
+		void sync_cpu_to_gpu();
+		
+		/**
+		 * \brief Destroy the specific texture
+		 * \param texture_object the texture to be destroyed. if texture_object == 0, destroy all textures
+		 */
+		void destroy_texture(cudaTextureObject_t texture_object = 0);
 
-		// Copy data to some buffer
-		// dst:  destination
-		// from: from CPU/GPU data of this Blob
-		// to:   to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
-		void copyTo(void *dst, storage_t from, storage_t to) const;
-		void copyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const;
-
-		// Copy data from some buffer
-		// src:  source
-		// from: from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
-		// to:   to CPU/GPU/Both data of this Blob
-		void copyFrom(void *src, storage_t from, storage_t to);
-		void copyFrom(cudaPitchedPtr *src, storage_t from, storage_t to);
-
-		// Destroy the specific texture
-		// if texture_object == 0, destroy all textures
-		void destroyTexture(cudaTextureObject_t texture_object = 0);
-
-		// Set all memory to zero
+		/**
+		 * \brief Set all memory to zero
+		 */
 		void clear();
 
 	public:
-		// Return nx (in elements)
-		virtual uint nx() const = 0;
+		/** \return nx (in bytes) */
+		size_t nx_in_bytes() const { return nx_in_bytes_; }
 
-		// Return nx (in bytes)
-		size_t nx_in_bytes() const { return _nx_in_bytes; }
+		/** \return ny (in elements) */
+		uint ny() const { return ny_; }
 
-		// Return ny (in elements)
-		uint ny() const { return _ny; }
+		/** \return nz (in elements) */
+		uint nz() const { return nz_; }
 
-		// Return nz (in elements)
-		uint nz() const { return _nz; }
+		/** \return GPU device id of underlying storage */
+		int gpu_device() const { return storage_gpu_device_; }
 
-		// Return total number of elements 
-		// ( = nx() * ny() * nz())
-		virtual uint numel() const = 0;
-
-		// Return shape 
-		// ( = make_tuple(nx(), ny(), nz()))
-		virtual shape_t shape() const = 0;
-
-		// Return GPU device id of underlying storage
-		int gpu_device() const { return _storage_gpu_device; }
-
-		// Return total size in bytes on CPU
-		// ( = nx_in_bytes() * ny() * nz())
-		size_t size_cpu_in_bytes() const 
-		{ 
-			return _nx_in_bytes * _ny * _nz;
+		/** \return total size in bytes on CPU ( = nx_in_bytes() * ny() * nz()) */
+		size_t size_cpu_in_bytes() const
+		{
+			return nx_in_bytes_ * ny_ * nz_;
 		}
 
-		// Return total size of bytes on GPU
-		// ( = pitch_in_bytes() * ny() * nz())
+		/** \return total size of bytes on GPU ( = pitch_in_bytes() * ny() * nz()) */
 		size_t size_gpu_in_bytes() const
 		{
-			return _data_gpu.pitch * _ny * _nz;
+			return data_gpu_.pitch * ny_ * nz_;
 		}
 
-		// Return pitch in bytes
-		// Total memory allocated = pitch_in_bytes() * ny() * nz()
+		/** 
+		 * \return pitch in bytes.\n
+		 * Total memory allocated = pitch_in_bytes() * ny() * nz() 
+		 */
 		size_t pitch_in_bytes() const
 		{
-			return _data_gpu.pitch;
+			return data_gpu_.pitch;
 		}
-
-		// Return pitch in elements
-		virtual uint pitch_in_elements() const = 0;
-
-		// Return raw pointer of CPU data
-		const void *data_cpu() const
+		
+		/** \return raw pointer of CPU data */
+		const void *data_cpu_void() const
 		{
-			return _data_cpu;
+			return data_cpu_;
 		}
 
-		// Return raw pointer of CPU data
-		void *data_cpu()
+		/** \return raw pointer of CPU data */
+		void *data_cpu_void()
 		{
-			return _data_cpu;
+			return data_cpu_;
 		}
 
-		// Return cudaPitchedPtr of GPU data
+		/** \return cudaPitchedPtr of GPU data */
 		const cudaPitchedPtr *data_gpu_cuda_pitched_ptr() const
 		{
-			return &_data_gpu;
+			return &data_gpu_;
 		}
 
-		// Return cudaPitchedPtr of GPU data
+		/** \return cudaPitchedPtr of GPU data */
 		const cudaPitchedPtr *data_gpu_cuda_pitched_ptr()
 		{
-			return &_data_gpu;
+			return &data_gpu_;
 		}
-
-		// Return cudaTextureObject of GPU data in 2D
-		// If no texture of specific parameters exists, a new texture object will be created.
-		// If the Blob is 3D, use layer_id to specify which layer should be sampled.
-		// Each layer has a unique texture. Consider using 3D texture to avoid creating too many textures.
-		// texDesc is optional
-		// default texDesc: clamp addr mode, linear filter, not normalized
-		virtual cudaTextureObject_t data_texture_2d(
-			const cudaTextureDesc *texDesc = nullptr,
-			uint layer_id = 0) const = 0;
-
-		// Return cudaTextureObject of GPU data in 3D
-		// If no texture of specific parameters exists, a new texture object will be created.
-		// Call this method to re-obtain the texture after GPU data are modified
-		// A memory copy is needed. Consider using linear memory for better performance.
-		// texDesc is optional
-		// default texDesc: clamp addr mode, linear filter, not normalized
-		virtual cudaTextureObject_t data_texture_3d(
-			const cudaTextureDesc *texDesc = nullptr) const = 0;
 
 	public:
 		typedef std::tuple<cudaTextureDesc, cudaChannelFormatDesc, unsigned char, uint> texture_param_t;
 
 	protected:
-		// Create cudaTextureObject of GPU data in 2D
-		cudaTextureObject_t _CreateTexture2d(const texture_param_t &params) const;
+		/**
+		* \brief Copy data to some buffer
+		* \param dst destination
+		* \param from from CPU/GPU data of this Blob
+		* \param to to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
+		*/
+		void _CopyTo(void *dst, storage_t from, storage_t to) const;
 
-		// Create cudaTextureObject of GPU data in 3D
-		cudaTextureObject_t _CreateTexture3d(const texture_param_t &params) const;
+		/**
+		* \brief Copy data to some buffer
+		* \param dst destination pointer
+		* \param from from CPU/GPU data of this Blob
+		* \param to to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
+		*/
+		void _CopyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const;
 
-		// Copy data from pitched pointer to 3d CUDA array
+
+		/**
+		* \brief Copy data from some buffer
+		* \param src source pointer
+		* \param from from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
+		* \param to to CPU/GPU/Both data of this Blob
+		*/
+		void _CopyFrom(void *src, storage_t from, storage_t to);
+
+		/**
+		* \brief Copy data from some buffer
+		* \param src source pointer
+		* \param from from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
+		* \param to to CPU/GPU/Both data of this Blob
+		*/
+		void _CopyFrom(cudaPitchedPtr *src, storage_t from, storage_t to);
+
+		/** \brief Create cudaTextureObject of GPU data in 2D */
+		cudaTextureObject_t _CreateTexture2D(const texture_param_t &params) const;
+
+		/** \brief Create cudaTextureObject of GPU data in 3D */
+		cudaTextureObject_t _CreateTexture3D(const texture_param_t &params) const;
+
+		/** \brief Copy data from pitched pointer to 3d CUDA array */
 		void _CopyToCudaArray() const;
 
 		void _InitCuda(int gpu_device = -1);
@@ -175,24 +175,23 @@ namespace ssv
 		void _MoveCuda(BlobBase &&other);
 		void _DestroyCuda();
 
-
 	protected:
 		static texture_param_t _MakeTextureParam(
-			const cudaTextureDesc * texDesc, const cudaChannelFormatDesc * channelDesc, 
+			const cudaTextureDesc *tex_desc, const cudaChannelFormatDesc *channel_desc,
 			unsigned char dimension, uint layer_id);
 
 	protected:
-		size_t _nx_in_bytes;
-		uint _ny, _nz;
-		void *_data_cpu;
+		size_t nx_in_bytes_;
+		uint ny_, nz_;
+		void *data_cpu_;
 
 	protected:
-		int _storage_gpu_device;
-		cudaExtent _data_gpu_extent;
-		cudaPitchedPtr _data_gpu;
-		mutable cudaTextureObject_t _data_texture_default_2d, _data_texture_default_3d;
-		mutable std::unordered_map<texture_param_t, cudaTextureObject_t, ssv::hash_tuple::hash<texture_param_t> > _data_textures;
-		mutable cudaArray_t _data_cuda_array;
+		int storage_gpu_device_{};
+		cudaExtent data_gpu_extent_{};
+		cudaPitchedPtr data_gpu_{};
+		mutable cudaTextureObject_t data_texture_default_2d_{}, data_texture_default_3d_{};
+		mutable std::unordered_map<texture_param_t, cudaTextureObject_t, hash_tuple::hash<texture_param_t> > data_textures_;
+		mutable cudaArray_t data_cuda_array_{};
 	};
 }
 

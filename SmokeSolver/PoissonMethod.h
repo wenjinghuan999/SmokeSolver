@@ -26,62 +26,69 @@ namespace ssv
 	class PoissonMethodGS : public PoissonMethod
 	{
 	public:
-		PoissonMethodGS(ssv::uint iterations, ssv::T omega)
-			: _iterations(iterations), _omega(omega) {}
+		PoissonMethodGS(uint iterations, real omega)
+			: iterations_(iterations), omega_(omega)
+		{
+		}
+
 		template <typename QType>
-		void operator() (
+		void operator()(
 			Blob<QType> &q, const Blob<QType> &g
-			) const;
+		) const;
 	private:
-		ssv::uint _iterations;
-		ssv::T _omega;
+		uint iterations_;
+		real omega_;
 	};
 
 	class PoissonMethodVCycle : public PoissonMethod
 	{
 	public:
-		PoissonMethodVCycle(ssv::uint levels, ssv::uint iterations, ssv::T omega)
-			: _levels(levels), _gs(iterations, omega) {}
+		PoissonMethodVCycle(uint levels, uint iterations, real omega)
+			: levels_(levels), gs_(iterations, omega)
+		{
+		}
+
 		template <typename QType>
-		void operator() (
+		void operator()(
 			Blob<QType> &q, const Blob<QType> &g
-			) const;
+		) const;
 	private:
-		ssv::uint _levels;
-		PoissonMethodGS _gs;
+		uint levels_;
+		PoissonMethodGS gs_;
 	};
 
 	class PoissonMethodCG : public PoissonMethod
 	{
 	public:
-		PoissonMethodCG(ssv::uint iterations)
-			: _iterations(iterations)
+		explicit PoissonMethodCG(uint iterations)
+			: iterations_(iterations)
 		{
-			_Init(); 
+			_Init();
 		}
+
 		template <typename QType>
-		void operator() (
+		void operator()(
 			Blob<QType> &q, const Blob<QType> &g
-			) const;
+		) const;
 	private:
 		void _Init();
-		void _PCGInit(const BlobShape &shape) const;
+		void _PCGInit(const blob_shape_t &shape) const;
 		void _PCGExecute() const;
 		void _PCGDestroy() const;
 	private:
-		ssv::uint _iterations;
+		uint iterations_;
 		// Handle
-		cublasHandle_t _cublasHandle;
-		cusparseHandle_t _cusparseHandle;
+		cublasHandle_t cublas_handle_;
+		cusparseHandle_t cusparse_handle_;
 		// Buffer
-		mutable ssv::BlobShape _buffer_shape;
-		mutable cusparseMatDescr_t _descrA, _descrL, _descrU;
-		mutable cusparseSolveAnalysisInfo_t _infoA, _infoU;
-		mutable size_t _nnz, _nall;
-		mutable T *_d_val;
-		mutable int *_d_col, *_d_row;
-		mutable T *_d_x, *_d_r;
-		mutable T *_d_valsILU0, *_d_zm1, *_d_zm2, *_d_rm2, *_d_y, *_d_p, *_d_omega;
+		mutable blob_shape_t buffer_shape_;
+		mutable cusparseMatDescr_t descr_a_, descr_l_, descr_u_;
+		mutable cusparseSolveAnalysisInfo_t info_a_, info_u_;
+		mutable size_t nnz_, nall_;
+		mutable real *d_val_;
+		mutable int *d_col_, *d_row_;
+		mutable real *d_x_, *d_r_;
+		mutable real *d_vals_ilu0_, *d_zm1_, *d_zm2_, *d_rm2_, *d_y_, *d_p_, *d_omega_;
 	};
 }
 

@@ -10,6 +10,8 @@ namespace ssv
 {
 	class SmokeSolver
 	{
+	protected:
+		~SmokeSolver() = default;
 	public:
 		virtual void init() = 0;
 		virtual void step() = 0;

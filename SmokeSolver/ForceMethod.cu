@@ -1,4 +1,3 @@
-
 #include "common.cuh"
 #include "ForceMethod.h"
 using namespace ssv;
@@ -7,46 +6,47 @@ using namespace ssv;
 
 namespace
 {
-	template<typename FType>
+	template <typename FType>
 	struct simple_buoyancy;
 
-	template<>
-	struct simple_buoyancy<T2>
+	template <>
+	struct simple_buoyancy<real2>
 	{
-		typedef T argument_type;
-		typedef T2 result_type;
-		T alpha, beta, tm0;
-		__host__ __device__ const T2 operator() (
-			const T &rh, const T &tm) const
+		typedef real argument_type;
+		typedef real2 result_type;
+		real alpha, beta, tm0;
+		__host__ __device__ real2 operator()(
+			const real &rh, const real &tm) const
 		{
-			return make_T2(0.f, -alpha * rh + beta * (tm - tm0));
+			return make_real2(0.f, -alpha * rh + beta * (tm - tm0));
 		}
 	};
-	template<>
-	struct simple_buoyancy<T4>
+
+	template <>
+	struct simple_buoyancy<real4>
 	{
-		typedef T argument_type;
-		typedef T4 result_type;
-		T alpha, beta, tm0;
-		__host__ __device__ const T4 operator() (
-			const T &rh, const T &tm) const
+		typedef real argument_type;
+		typedef real4 result_type;
+		real alpha, beta, tm0;
+		__host__ __device__ real4 operator()(
+			const real &rh, const real &tm) const
 		{
 			return make_float4(0, 0, -alpha * rh + beta * (tm - tm0), 0);
 		}
 	};
 }
 
-template<typename FType>
+template <typename FType>
 void ForceMethodSimple::operator()(
-	Blob<FType>& fout, const Blob<T>& rh, const Blob<T>& tm
-	) const
+	Blob<FType> &fout, const Blob<real> &rh, const Blob<real> &tm
+) const
 {
 	thrust::transform(rh.begin_gpu(), rh.end_gpu(),
-		tm.begin_gpu(), fout.begin_gpu(),
-		simple_buoyancy<FType>{_alpha, _beta, _tm0});
+	                  tm.begin_gpu(), fout.begin_gpu(),
+	                  simple_buoyancy<FType>{alpha_, beta_, tm0_});
 }
 
-template void ForceMethodSimple::operator()<T2>(
-	Blob<T2>& fout, const Blob<T>& rh, const Blob<T>& tm) const;
-template void ForceMethodSimple::operator()<T4>(
-	Blob<T4>& fout, const Blob<T>& rh, const Blob<T>& tm) const;
+template void ForceMethodSimple::operator()<real2>(
+	Blob<real2> &fout, const Blob<real> &rh, const Blob<real> &tm) const;
+template void ForceMethodSimple::operator()<real4>(
+	Blob<real4> &fout, const Blob<real> &rh, const Blob<real> &tm) const;

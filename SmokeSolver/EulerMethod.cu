@@ -1,4 +1,3 @@
-
 #include "common.cuh"
 #include "EulerMethod.h"
 using namespace ssv;
@@ -10,7 +9,7 @@ using thrust::placeholders::_2;
 template <typename QType>
 void EulerMethodForward::operator()(
 	Blob<QType> &q, const Blob<QType> &d
-	) const
+) const
 {
 	thrust::transform(
 		q.begin_gpu(), q.end_gpu(), d.begin_gpu(), q.begin_gpu(),
@@ -18,6 +17,6 @@ void EulerMethodForward::operator()(
 	);
 }
 
-template void EulerMethodForward::operator()<T>(Blob<T> &, const Blob<T> &) const;
-template void EulerMethodForward::operator()<T2>(Blob<T2> &, const Blob<T2> &) const;
-template void EulerMethodForward::operator()<T4>(Blob<T4> &, const Blob<T4> &) const;
+template void EulerMethodForward::operator()<real>(Blob<real> &, const Blob<real> &) const;
+template void EulerMethodForward::operator()<real2>(Blob<real2> &, const Blob<real2> &) const;
+template void EulerMethodForward::operator()<real4>(Blob<real4> &, const Blob<real4> &) const;

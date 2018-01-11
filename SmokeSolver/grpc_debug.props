@@ -6,12 +6,11 @@
   </PropertyGroup>
   <PropertyGroup>
     <IncludePath>$(GRPC_HOME)\include;$(GRPC_HOME)\third_party\protobuf\src;$(IncludePath)</IncludePath>
-    <LibraryPath>$(GRPC_HOME)\bin\protobuf\debug;$(GRPC_HOME)\bin\grpc\debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(GRPC_HOME)\bin\grpc\debug;$(GRPC_HOME)\bin\protobuf\debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>_WIN32_WINNT=0x600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <AdditionalDependencies>libprotobufd.lib;gpr.lib;grpc.lib;grpc++.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>

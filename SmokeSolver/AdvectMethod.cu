@@ -1,4 +1,3 @@
-
 #include "common.cuh"
 #include "AdvectMethod.h"
 using namespace ssv;
@@ -14,13 +13,13 @@ namespace
 	// u : nx x ny
 	template <typename QType>
 	__global__ void kernelAdvectMethodSemiLagrangian(
-		BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T2> u
+		BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<real2> u
 	)
 	{
 		uint y = blockIdx.x;
 		uint x = threadIdx.x;
 
-		T2 p0 = make_T2(x, y) + (T)(0.5) - u(x, y);
+		real2 p0 = make_real2(x, y) + static_cast<real>(0.5) - u(x, y);
 
 		qout(x, y) = tex2D<QType>(q, p0.x, p0.y);
 	}
@@ -32,14 +31,14 @@ namespace
 	// u : nx x ny x nz
 	template <typename QType>
 	__global__ void kernelAdvectMethodSemiLagrangian(
-		BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<T4> u
+		BlobWrapper<QType> qout, cudaTextureObject_t q, BlobWrapperConst<real4> u
 	)
 	{
 		uint z = blockIdx.y;
 		uint y = blockIdx.x;
 		uint x = threadIdx.x;
 
-		T4 p0 = make_float4(x, y, z, 0) + (T)(0.5) - u(x, y, z);
+		real4 p0 = make_float4(x, y, z, 0) + static_cast<real>(0.5) - u(x, y, z);
 
 		qout(x, y, z) = tex3D<QType>(q, p0.x, p0.y, p0.z);
 	}
@@ -47,34 +46,34 @@ namespace
 
 template <typename QType>
 void AdvectMethodSemiLagrangian::operator()(
-	Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
-	) const
+	Blob<QType> &qout, const Blob<QType> &q, const Blob<real2> &u
+) const
 {
 	kernelAdvectMethodSemiLagrangian<<<q.ny(), q.nx()>>>(
 		qout.wrapper(), q.data_texture_2d(), u.wrapper_const()
-		);
+	);
 }
 
-template void AdvectMethodSemiLagrangian::operator()<T>(
-	Blob<T> &, const Blob<T> &, const Blob<T2> &) const;
-template void AdvectMethodSemiLagrangian::operator()<T2>(
-	Blob<T2> &, const Blob<T2> &, const Blob<T2> &) const;
-template void AdvectMethodSemiLagrangian::operator()<T4>(
-	Blob<T4> &, const Blob<T4> &, const Blob<T2> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real>(
+	Blob<real> &, const Blob<real> &, const Blob<real2> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real2>(
+	Blob<real2> &, const Blob<real2> &, const Blob<real2> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real4>(
+	Blob<real4> &, const Blob<real4> &, const Blob<real2> &) const;
 
 template <typename QType>
 void AdvectMethodSemiLagrangian::operator()(
-	Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
-	) const
+	Blob<QType> &qout, const Blob<QType> &q, const Blob<real4> &u
+) const
 {
 	kernelAdvectMethodSemiLagrangian<<<dim3(q.ny(), q.nz()), q.nx()>>>(
 		qout.wrapper(), q.data_texture_3d(), u.wrapper_const()
-		);
+	);
 }
 
-template void AdvectMethodSemiLagrangian::operator()<T>(
-	Blob<T> &, const Blob<T> &, const Blob<T4> &) const;
-template void AdvectMethodSemiLagrangian::operator()<T2>(
-	Blob<T2> &, const Blob<T2> &, const Blob<T4> &) const;
-template void AdvectMethodSemiLagrangian::operator()<T4>(
-	Blob<T4> &, const Blob<T4> &, const Blob<T4> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real>(
+	Blob<real> &, const Blob<real> &, const Blob<real4> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real2>(
+	Blob<real2> &, const Blob<real2> &, const Blob<real4> &) const;
+template void AdvectMethodSemiLagrangian::operator()<real4>(
+	Blob<real4> &, const Blob<real4> &, const Blob<real4> &) const;

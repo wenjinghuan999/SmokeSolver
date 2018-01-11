@@ -7,8 +7,6 @@
 #include "BlobBase.h"
 #include "pitched_ptr.h"
 
-#include <cuda_texture_types.h>
-
 namespace ssv
 {
 	template <typename>
@@ -18,134 +16,160 @@ namespace ssv
 	template <typename>
 	struct BlobWrapperConst;
 
-	// Basic data structure
-	// Contains 2D or 3D data on CPU/GPU and provides managed texture objects
-	template <typename _T>
+	/**
+	 * \brief Basic data structure, Contains 2D or 3D data on CPU/GPU and provides managed texture objects
+	 * \tparam T element data type
+	 */
+	template <typename T>
 	class Blob
 		: public BlobBase
 	{
 	public:
-		typedef BlobBase::shape_t shape_t;
-		typedef BlobWrapper<_T> wrapper_t;
-		typedef BlobWrapperConst<_T> wrapper_const_t;
-		typedef BlobBase::storage_t storage_t;
+		/** \brief A light-weighted helper class for easier kernel implementation using Blob */
+		using wrapper_t = BlobWrapper<T>;
+		/** \brief A light-weighted helper class for easier kernel implementation using Blob */
+		using wrapper_const_t = BlobWrapperConst<T>;
 
-	public:
-		Blob() : BlobBase() {}
+		/** \brief Construct without allocating memory */
+		Blob() = default;
 
-		// nx, ny, nz: size in elements
-		// gpu_device: cuda device id
-		// cpu_copy: if true, copying from and to CPU is enabled
-		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, storage_t storage = storage_t::Both)
-			: BlobBase(nx * sizeof(_T), ny, nz, gpu_device, storage) {}
-
-		// shape: size in elements
-		// gpu_device: cuda device id
-		// cpu_copy: if true, copying from and to CPU is enabled
-		Blob(std::tuple<uint, uint, uint> shape, int gpu_device = 0, storage_t storage = storage_t::Both)
-			: BlobBase(std::get<0>(shape) * sizeof(_T), std::get<1>(shape), std::get<2>(shape),
-				gpu_device, storage) {}
-
-	public:
-		// Copy data to some buffer
-		// dst:  destination
-		// from: from CPU/GPU data of this Blob
-		// to:   to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
-		void copyTo(_T *dst, storage_t from, storage_t to) const
+		/**
+		 * \brief 
+		 * \param nx size in elements
+		 * \param ny size in elements
+		 * \param nz size in elements
+		 * \param gpu_device cuda device id
+		 * \param storage if true, copying from and to CPU is enabled
+		 */
+		Blob(uint nx, uint ny, uint nz = 1u, int gpu_device = 0, storage_t storage = storage_t::BOTH)
+			: BlobBase(nx * sizeof(T), ny, nz, gpu_device, storage)
 		{
-			BlobBase::copyTo(static_cast<void *>(dst), from, to);
 		}
 
-		// Copy data from some buffer
-		// src:  source
-		// from: from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
-		// to:   to CPU/GPU/Both data of this Blob
-		void copyFrom(_T *src, storage_t from, storage_t to)
+		/**
+		 * \brief Construct Blob from tuple formed shape
+		 * \param shape size in elements
+		 * \param gpu_device cuda device id
+		 * \param storage if true, copying from and to CPU is enabled
+		 */
+		explicit Blob(std::tuple<uint, uint, uint> shape, int gpu_device = 0, storage_t storage = storage_t::BOTH)
+			: BlobBase(std::get<0>(shape) * sizeof(T), std::get<1>(shape), std::get<2>(shape),
+			           gpu_device, storage)
 		{
-			BlobBase::copyFrom(static_cast<void *>(src), from, to);
 		}
 
-		// Return cudaTextureObject of GPU data in 2D
-		// If no texture of specific parameters exists, a new texture object will be created.
-		// If the Blob is 3D, use layer_id to specify which layer should be sampled.
-		// Each layer has a unique texture. Consider using 3D texture to avoid creating too many textures.
-		// texDesc is optional
-		// default texDesc: clamp addr mode, linear filter, not normalized
-		virtual cudaTextureObject_t data_texture_2d(
-			const cudaTextureDesc *texDesc = nullptr,
+	public:
+		/**
+		 * \brief Copy data to some buffer
+		 * \param dst destination pointer
+		 * \param from from CPU/GPU data of this Blob
+		 * \param to to CPU/GPU buffer (i.e. is dst a CPU/GPU pointer)
+		 */
+		void copy_to(T *dst, storage_t from, storage_t to) const
+		{
+			_CopyTo(static_cast<void *>(dst), from, to);
+		}
+
+		/**
+		 * \brief Copy data from some buffer
+		 * \param src source pointer
+		 * \param from from CPU/GPU buffer (i.e. is src a CPU/GPU pointer)
+		 * \param to to CPU/GPU/Both data of this Blob
+		 */
+		void copy_from(T *src, storage_t from, storage_t to)
+		{
+			_CopyFrom(static_cast<void *>(src), from, to);
+		}
+
+		/**
+		* \brief Get GPU data as texture in 2D.\n
+		* If no texture of specific parameters exists, a new texture object will be created.\n
+		* Each layer has a unique texture. Consider using 3D texture to avoid creating too many textures.\n
+		* Note that a linear filter mode and a clamp address mode are used.\n
+		* \code tex2D<T>(b.data_texture_2d(), x + 0.5, y + 0.5) = b(x, y); \endcode
+		* \param tex_desc (optional) default: clamp addr mode, linear filter, not normalized
+		* \param layer_id If the Blob is 3D, use layer_id to specify which layer should be sampled
+		* \return cudaTextureObject of GPU data in 2D
+		*/
+		cudaTextureObject_t data_texture_2d(
+			const cudaTextureDesc *tex_desc = nullptr,
 			uint layer_id = 0
-		) const override
+		) const
 		{
-			if (texDesc == nullptr && layer_id == 0)
+			if (tex_desc == nullptr && layer_id == 0)
 			{
-				if (_data_texture_default_2d)
+				if (data_texture_default_2d_)
 				{
-					return _data_texture_default_2d;
+					return data_texture_default_2d_;
 				}
 			}
 
-			cudaChannelFormatDesc sChannelDesc = cudaCreateChannelDesc<_T>();
+			cudaChannelFormatDesc channel_desc = cudaCreateChannelDesc<T>();
 			texture_param_t params = _MakeTextureParam(
-				texDesc, &sChannelDesc, 2u, layer_id
+				tex_desc, &channel_desc, 2u, layer_id
 			);
-			auto iter = _data_textures.find(params);
-			if (iter != _data_textures.end())
+			auto iter = data_textures_.find(params);
+			if (iter != data_textures_.end())
 			{
 				return iter->second;
 			}
 
-			cudaTextureObject_t texture_object = _CreateTexture2d(params);
+			cudaTextureObject_t texture_object = _CreateTexture2D(params);
 
-			if (texDesc == nullptr && layer_id == 0)
+			if (tex_desc == nullptr && layer_id == 0)
 			{
-				_data_texture_default_2d = texture_object;
+				data_texture_default_2d_ = texture_object;
 			}
 			else
 			{
-				_data_textures[params] = texture_object;
+				data_textures_[params] = texture_object;
 			}
 
 			return texture_object;
 		}
 
-		// Return cudaTextureObject of GPU data in 3D
-		// If no texture of specific parameters exists, a new texture object will be created.
-		// Call this method to re-obtain the texture after GPU data are modified
-		// A memory copy is needed. Consider using linear memory for better performance.
-		// texDesc is optional
-		// default texDesc: clamp addr mode, linear filter, not normalized
-		virtual cudaTextureObject_t data_texture_3d(
-			const cudaTextureDesc *texDesc = nullptr
-		) const override
+		/**
+		* \brief Get GPU data as texture in 3D.\n
+		* If no texture of specific parameters exists, a new texture object will be created.\n
+		* Call this method to re-obtain the texture after GPU data are modified.\n
+		* A memory copy is needed. Consider using linear memory for better performance.\n
+		* Note that a linear filter mode and a clamp address mode are used.\n
+		* \code tex3D<T>(b.data_texture_3d(), x + 0.5, y + 0.5, z + 0.5) = b(x, y, z); \endcode
+		* \param tex_desc (optional) default: clamp addr mode, linear filter, not normalized
+		* \return cudaTextureObject of GPU data in 3D.
+		*/
+		cudaTextureObject_t data_texture_3d(
+			const cudaTextureDesc *tex_desc = nullptr
+		) const
 		{
-			if (texDesc == nullptr)
+			if (tex_desc == nullptr)
 			{
-				if (_data_texture_default_3d)
+				if (data_texture_default_3d_)
 				{
 					_CopyToCudaArray();
-					return _data_texture_default_3d;
+					return data_texture_default_3d_;
 				}
 			}
-			cudaChannelFormatDesc sChannelDesc = cudaCreateChannelDesc<_T>();
+			cudaChannelFormatDesc s_channel_desc = cudaCreateChannelDesc<T>();
 			texture_param_t params = _MakeTextureParam(
-				texDesc, &sChannelDesc, 3u, 0
+				tex_desc, &s_channel_desc, 3u, 0
 			);
-			auto iter = _data_textures.find(params);
-			if (iter != _data_textures.end())
+			auto iter = data_textures_.find(params);
+			if (iter != data_textures_.end())
 			{
 				_CopyToCudaArray();
 				return iter->second;
 			}
 
-			cudaTextureObject_t texture_object = _CreateTexture3d(params);
+			cudaTextureObject_t texture_object = _CreateTexture3D(params);
 
-			if (texDesc == nullptr)
+			if (tex_desc == nullptr)
 			{
-				_data_texture_default_3d = texture_object;
+				data_texture_default_3d_ = texture_object;
 			}
 			else
 			{
-				_data_textures[params] = texture_object;
+				data_textures_[params] = texture_object;
 			}
 
 			_CopyToCudaArray();
@@ -153,23 +177,23 @@ namespace ssv
 		}
 
 	public:
-		// Set data in cube
-		void setDataCubeCpu(_T value, uint x0, uint x1, uint y0, uint y1, uint z0 = 0, uint z1 = 0)
+		/** \brief Set data to \p value in cube [\p x0, \p x1, \p y0, \p y1, \p z0, \p z1] */
+		void set_data_cube_cpu(T value, uint x0, uint x1, uint y0, uint y1, uint z0 = 0, uint z1 = 0)
 		{
-			uint _nx = nx();
-			if (x0 >= _nx || x1 >= _nx || x0 > x1
-				|| y0 >= _nx || y0 >= _ny || y0 > y1
-				|| z0 >= _nx || z0 >= _nz || z0 > z1)
+			uint nx = this->nx();
+			if (x0 >= nx || x1 >= nx || x0 > x1
+				|| y0 >= nx || y0 >= ny_ || y0 > y1
+				|| z0 >= nx || z0 >= nz_ || z0 > z1)
 			{
-				throw error_t::SSV_ERROR_INVALID_VALUE;
+				throw error_t(error_t::SSV_ERROR_INVALID_VALUE);
 			}
-			_T *pa = data_cpu();
+			T *pa = data_cpu();
 			for (uint z = z0; z <= z1; z++)
 			{
-				_T *pz = pa + z * _ny * _nx;
+				T *pz = pa + z * ny_ * nx;
 				for (uint y = y0; y <= y1; y++)
 				{
-					_T *p = pz + y * _nx + x0;
+					T *p = pz + y * nx + x0;
 					for (uint x = x0; x <= x1; x++)
 					{
 						*(p++) = value;
@@ -179,184 +203,184 @@ namespace ssv
 		}
 
 	public:
-		// Return nx (in elements)
-		virtual uint nx() const override
+		/** \return Return nx (in elements) */
+		uint nx() const
 		{
-			return (uint)(_nx_in_bytes / sizeof(_T));
+			return static_cast<uint>(nx_in_bytes_ / sizeof(T));
 		}
 
-		// Return total number of elements 
-		// ( = nx() * ny() * nz())
-		virtual uint numel() const override
+		/** \return total number of elements ( = nx() * ny() * nz()) */
+		uint numel() const
 		{
-			return (uint)(_nx_in_bytes * _ny * _nz / sizeof(_T));
+			return static_cast<uint>(nx_in_bytes_ * ny_ * nz_ / sizeof(T));
 		}
 
-		// Return shape 
-		// ( = make_tuple(nx(), ny(), nz()))
-		virtual shape_t shape() const override
+		/** \return shape ( = make_tuple(nx(), ny(), nz())) */
+		shape_t shape() const
 		{
-			return std::make_tuple((uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz);
+			return std::make_tuple(static_cast<uint>(nx_in_bytes_ / sizeof(T)), ny_, nz_);
 		}
 
-		// Return pitch in elements
-		// Total memory allocated = pitch_in_elements * ny * nz * sizeof(_T)
-		virtual uint pitch_in_elements() const override
+		/**
+		 * \return pitch in elements.\n
+		 * Total memory allocated = pitch_in_elements * ny * nz * sizeof(_T)
+		 */
+		uint pitch_in_elements() const
 		{
-			return (uint)(_data_gpu.pitch / sizeof(_T));
+			return static_cast<uint>(data_gpu_.pitch / sizeof(T));
 		}
 
-		// Raw pointer of CPU data
-		const _T *data_cpu() const
+		/** \return raw pointer of CPU data */
+		const T *data_cpu() const
 		{
-			return static_cast<const _T *>(_data_cpu);
+			return static_cast<const T *>(data_cpu_);
 		}
 
-		// Raw pointer of CPU data
-		_T *data_cpu()
+		/** \return raw pointer of CPU data */
+		T *data_cpu()
 		{
-			return static_cast<_T *>(_data_cpu);
+			return static_cast<T *>(data_cpu_);
 		}
 
-		// Begining pointer of CPU data
-		// = data_cpu()
-		const _T *begin_cpu() const
+		/** \return Begining pointer of CPU data (= data_cpu_void()) */
+		const T *begin_cpu() const
 		{
-			return static_cast<const _T *>(_data_cpu);
+			return static_cast<const T *>(data_cpu_);
 		}
 
-		// Begining pointer of CPU data
-		// = data_cpu()
-		_T *begin_cpu()
+		/** \return begining pointer of CPU data (= data_cpu_void()) */
+		T *begin_cpu()
 		{
-			return static_cast<_T *>(_data_cpu);
+			return static_cast<T *>(data_cpu_);
 		}
 
-		// Ending pointer of CPU data
-		// = data_cpu() + numel()
-		const _T *end_cpu() const
+		/** \return ending pointer of CPU data (= data_cpu_void() + numel()) */
+		const T *end_cpu() const
 		{
-			return static_cast<const _T *>(_data_cpu) + numel();
+			return static_cast<const T *>(data_cpu_) + numel();
 		}
 
-		// Ending pointer of CPU data
-		// = data_cpu() + numel()
-		_T *end_cpu()
+		/** \return ending pointer of CPU data (= data_cpu_void() + numel()) */
+		T *end_cpu()
 		{
-			return static_cast<_T *>(_data_cpu) + numel();
+			return static_cast<T *>(data_cpu_) + numel();
 		}
 
-		// pitched_ptr of GPU data
-		pitched_ptr<const _T> data_gpu() const
+		/** \return pitched_ptr of GPU data */
+		pitched_ptr<const T> data_gpu() const
 		{
-			return pitched_ptr<const _T>(&_data_gpu);
+			return pitched_ptr<const T>(&data_gpu_);
 		}
 
-		// pitched_ptr of GPU data
-		pitched_ptr<_T> data_gpu()
+		/** \return pitched_ptr of GPU data */
+		pitched_ptr<T> data_gpu()
 		{
-			return pitched_ptr<_T>(&_data_gpu);
+			return pitched_ptr<T>(&data_gpu_);
 		}
 
-		// Begining pitched_ptr of GPU data
-		// = data_gpu()
-		pitched_ptr<const _T> begin_gpu() const
+		/** \return begining pitched_ptr of GPU data (= data_gpu()) */
+		pitched_ptr<const T> begin_gpu() const
 		{
-			return pitched_ptr<const _T>(&_data_gpu);
+			return pitched_ptr<const T>(&data_gpu_);
 		}
 
-		// Begining pitched_ptr of GPU data
-		// = data_gpu()
-		pitched_ptr<_T> begin_gpu()
+		/** \return begining pitched_ptr of GPU data (= data_gpu()) */
+		pitched_ptr<T> begin_gpu()
 		{
-			return pitched_ptr<_T>(&_data_gpu);
+			return pitched_ptr<T>(&data_gpu_);
 		}
 
-		// Ending pitched_ptr of GPU data
-		// = data_gpu() + numel()
-		pitched_ptr<const _T> end_gpu() const
+		/** \return ending pitched_ptr of GPU data (= data_gpu() + numel()) */
+		pitched_ptr<const T> end_gpu() const
 		{
-			return pitched_ptr<const _T>(&_data_gpu) + numel();
+			return pitched_ptr<const T>(&data_gpu_) + numel();
 		}
 
-		// Ending pitched_ptr of GPU data
-		// = data_gpu() + numel()
-		pitched_ptr<_T> end_gpu()
+		/** \return ending pitched_ptr of GPU data (= data_gpu() + numel()) */
+		pitched_ptr<T> end_gpu()
 		{
-			return pitched_ptr<_T>(&_data_gpu) + numel();
+			return pitched_ptr<T>(&data_gpu_) + numel();
 		}
 
-		// Raw pointer of GPU data
-		const _T *data_gpu_raw() const
+		/** \return raw pointer of GPU data */
+		const T *data_gpu_raw() const
 		{
-			return static_cast<const _T *>(_data_gpu.ptr);
+			return static_cast<const T *>(data_gpu_.ptr);
 		}
 
-		// Raw pointer of GPU data
-		_T *data_gpu_raw()
+		/** \return raw pointer of GPU data */
+		T *data_gpu_raw()
 		{
-			return static_cast<_T *>(_data_gpu.ptr);
+			return static_cast<T *>(data_gpu_.ptr);
 		}
 
-		// Return BlobWrapper of this Blob
+		/** \return wrapper of this Blob */
 		wrapper_t wrapper()
 		{
 			return wrapper_t{
-				static_cast<_T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
-					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
+				static_cast<T *>(data_gpu_.ptr), static_cast<uint>(data_gpu_.pitch / sizeof(T)),
+				static_cast<uint>(nx_in_bytes_ / sizeof(T)), ny_, nz_
+			};
 		}
 
-		// Return BlobWrapperConst of this Blob
+		/** \return const wrapper of this Blob */
 		wrapper_const_t wrapper_const() const
 		{
 			return wrapper_const_t{
-				static_cast<const _T *>(_data_gpu.ptr), (uint)(_data_gpu.pitch / sizeof(_T)),
-					(uint)(_nx_in_bytes / sizeof(_T)), _ny, _nz };
+				static_cast<const T *>(data_gpu_.ptr), static_cast<uint>(data_gpu_.pitch / sizeof(T)),
+				static_cast<uint>(nx_in_bytes_ / sizeof(T)), ny_, nz_
+			};
 		}
 	};
 
-	// A light-weighted helper class for easier kernel implementation using Blob
-	template<typename _T>
+	/**
+	 * \brief A light-weighted helper class for easier kernel implementation using Blob
+	 * \tparam T element data type
+	 */
+	template <typename T>
 	struct BlobWrapperConst
 	{
-		const _T *ptr;
+		const T *ptr;
 		uint pitch;
 		uint nx;
 		uint ny;
 		uint nz;
 
-		__device__ const _T &operator () (uint x, uint y, uint z)
+		__device__ const T &operator()(uint x, uint y, uint z)
 		{
 			return ptr[z * pitch * ny + y * pitch + x];
 		}
 
-		__device__ const _T &operator () (uint x, uint y)
+		__device__ const T &operator()(uint x, uint y)
 		{
 			return ptr[y * pitch + x];
 		}
 	};
 
-	// A light-weighted helper class for easier kernel implementation using Blob
-	template<typename _T>
+	/**
+	* \brief A light-weighted helper class for easier kernel implementation using Blob
+	* \tparam T element data type
+	*/
+	template <typename T>
 	struct BlobWrapper
 	{
-		_T *ptr;
+		T *ptr;
 		uint pitch;
 		uint nx;
 		uint ny;
 		uint nz;
 
-		operator BlobWrapperConst<_T>() const
+		operator BlobWrapperConst<T>() const
 		{
-			return BlobWrapperConst<_T>{ ptr, pitch, nx, ny, nz };
+			return BlobWrapperConst<T>{ptr, pitch, nx, ny, nz};
 		}
 
-		__device__ _T &operator()(uint x, uint y, uint z)
+		__device__ T &operator()(uint x, uint y, uint z)
 		{
 			return ptr[z * pitch * ny + y * pitch + x];
 		}
 
-		__device__ _T &operator()(uint x, uint y)
+		__device__ T &operator()(uint x, uint y)
 		{
 			return ptr[y * pitch + x];
 		}

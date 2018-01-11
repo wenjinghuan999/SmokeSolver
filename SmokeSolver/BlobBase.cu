@@ -1,35 +1,32 @@
-
 #include "common.cuh"
 #include "pitched_ptr.h"
 #include "BlobBase.h"
 using namespace ssv;
 
-#include "thrust/copy.h"
 
-
-void BlobBase::syncGpu2Cpu()
+void BlobBase::sync_gpu_to_cpu()
 {
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
-	if (_data_cpu == nullptr) return;
+	if (storage_gpu_device_ < 0) throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
+	if (data_cpu_ == nullptr) return;
 
-	copyTo(_data_cpu, storage_t::GPU, storage_t::CPU);
+	_CopyTo(data_cpu_, storage_t::GPU, storage_t::CPU);
 }
 
-void BlobBase::syncCpu2Gpu()
+void BlobBase::sync_cpu_to_gpu()
 {
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
-	if (_data_cpu == nullptr) return;
+	if (storage_gpu_device_ < 0) throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
+	if (data_cpu_ == nullptr) return;
 
-	copyFrom(_data_cpu, storage_t::CPU, storage_t::GPU);
+	_CopyFrom(data_cpu_, storage_t::CPU, storage_t::GPU);
 }
 
 namespace
 {
-	inline enum cudaMemcpyKind make_cudaMemcpyKind(
+	enum cudaMemcpyKind make_cudaMemcpyKind(
 		BlobBase::storage_t from, BlobBase::storage_t to
 	)
 	{
@@ -37,405 +34,399 @@ namespace
 		{
 			if (to == BlobBase::storage_t::CPU)
 				return cudaMemcpyHostToHost;
-			else
-				return cudaMemcpyHostToDevice;
+			return cudaMemcpyHostToDevice;
 		}
-		else
-		{
-			if (to == BlobBase::storage_t::CPU)
-				return cudaMemcpyDeviceToHost;
-			else
-				return cudaMemcpyDeviceToDevice;
-		}
+		if (to == BlobBase::storage_t::CPU)
+			return cudaMemcpyDeviceToHost;
+		return cudaMemcpyDeviceToDevice;
 	}
 }
 
-void BlobBase::copyTo(void *dst, storage_t from, storage_t to) const
+void BlobBase::_CopyTo(void *dst, storage_t from, storage_t to) const
 {
 	if ((from != storage_t::CPU && from != storage_t::GPU)
 		|| (to != storage_t::CPU && to != storage_t::GPU)
 		|| dst == nullptr)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 
 	cudaPitchedPtr dst_pitched_ptr =
-		make_cudaPitchedPtr(dst, _nx_in_bytes, _nx_in_bytes, _ny);
+		make_cudaPitchedPtr(dst, nx_in_bytes_, nx_in_bytes_, ny_);
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
-	cudaMemcpy3DParms params = { 0 };
+		make_cudaPitchedPtr(data_cpu_, nx_in_bytes_, nx_in_bytes_, ny_);
+	cudaMemcpy3DParms params = {nullptr};
 	if (from == storage_t::CPU)
 		params.srcPtr = data_cpu_pitched_ptr;
 	else
-		params.srcPtr = _data_gpu;
+		params.srcPtr = data_gpu_;
 	params.dstPtr = dst_pitched_ptr;
 	params.kind = make_cudaMemcpyKind(from, to);
-	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	params.extent = data_gpu_extent_;
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 }
 
-void BlobBase::copyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const
+void BlobBase::_CopyTo(cudaPitchedPtr *dst, storage_t from, storage_t to) const
 {
 	if ((from != storage_t::CPU && from != storage_t::GPU)
 		|| (to != storage_t::CPU && to != storage_t::GPU)
 		|| dst == nullptr || dst->ptr == nullptr)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
-	cudaMemcpy3DParms params = { 0 };
+		make_cudaPitchedPtr(data_cpu_, nx_in_bytes_, nx_in_bytes_, ny_);
+	cudaMemcpy3DParms params = {nullptr};
 	if (from == storage_t::CPU)
 		params.srcPtr = data_cpu_pitched_ptr;
 	else
-		params.srcPtr = _data_gpu;
+		params.srcPtr = data_gpu_;
 	params.dstPtr = *dst;
 	params.kind = make_cudaMemcpyKind(from, to);
-	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	params.extent = data_gpu_extent_;
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 }
 
-void BlobBase::copyFrom(void *src, storage_t from, storage_t to)
+void BlobBase::_CopyFrom(void *src, storage_t from, storage_t to)
 {
 	if ((from != storage_t::CPU && from != storage_t::GPU)
 		|| src == nullptr)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 
 	cudaPitchedPtr src_pitched_ptr =
-		make_cudaPitchedPtr(src, _nx_in_bytes, _nx_in_bytes, _ny);
+		make_cudaPitchedPtr(src, nx_in_bytes_, nx_in_bytes_, ny_);
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
-	cudaMemcpy3DParms params = { 0 };
+		make_cudaPitchedPtr(data_cpu_, nx_in_bytes_, nx_in_bytes_, ny_);
+	cudaMemcpy3DParms params = {nullptr};
 	if (to == storage_t::CPU)
 		params.dstPtr = data_cpu_pitched_ptr;
 	else
-		params.dstPtr = _data_gpu;
+		params.dstPtr = data_gpu_;
 	params.srcPtr = src_pitched_ptr;
 	params.kind = make_cudaMemcpyKind(from, to);
-	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	params.extent = data_gpu_extent_;
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 }
 
-void BlobBase::copyFrom(cudaPitchedPtr *src, storage_t from, storage_t to)
+void BlobBase::_CopyFrom(cudaPitchedPtr *src, storage_t from, storage_t to)
 {
 	if ((from != storage_t::CPU && from != storage_t::GPU)
 		|| src == nullptr || src->ptr == nullptr)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 
 	cudaPitchedPtr data_cpu_pitched_ptr =
-		make_cudaPitchedPtr(_data_cpu, _nx_in_bytes, _nx_in_bytes, _ny);
-	cudaMemcpy3DParms params = { 0 };
+		make_cudaPitchedPtr(data_cpu_, nx_in_bytes_, nx_in_bytes_, ny_);
+	cudaMemcpy3DParms params = {nullptr};
 	if (from == storage_t::CPU)
 		params.dstPtr = data_cpu_pitched_ptr;
 	else
-		params.dstPtr = _data_gpu;
+		params.dstPtr = data_gpu_;
 	params.srcPtr = *src;
 	params.kind = make_cudaMemcpyKind(from, to);
-	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	params.extent = data_gpu_extent_;
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 }
 
-void BlobBase::destroyTexture(cudaTextureObject_t texture_object)
+void BlobBase::destroy_texture(cudaTextureObject_t texture_object)
 {
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (storage_gpu_device_ < 0) throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
 
 	if (!texture_object)
 	{
-		if (_data_texture_default_2d)
+		if (data_texture_default_2d_)
 		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_2d),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(data_texture_default_2d_),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 			return;
 		}
-		if (_data_texture_default_3d)
+		if (data_texture_default_3d_)
 		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_3d),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(data_texture_default_3d_),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 			return;
 		}
-		for (auto kv : _data_textures)
+		for (auto kv : data_textures_)
 		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(kv.second),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(kv.second),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 		}
-		if (_data_cuda_array)
+		if (data_cuda_array_)
 		{
-			checkCudaErrorAndThrow(cudaFreeArray(_data_cuda_array),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaFreeArray(data_cuda_array_),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 		}
 	}
 	else
 	{
-		if (_data_texture_default_2d == texture_object)
+		if (data_texture_default_2d_ == texture_object)
 		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_2d),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(data_texture_default_2d_),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 			return;
 		}
-		if (_data_texture_default_3d == texture_object)
+		if (data_texture_default_3d_ == texture_object)
 		{
-			checkCudaErrorAndThrow(cudaDestroyTextureObject(_data_texture_default_3d),
-				error_t::SSV_ERROR_UNKNOWN);
+			CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(data_texture_default_3d_),
+				ssv_error(error_t::SSV_ERROR_UNKNOWN));
 			return;
 		}
-		for (auto kv : _data_textures)
+		for (auto kv : data_textures_)
 		{
 			if (kv.second == texture_object)
 			{
-				_data_textures.erase(kv.first);
-				checkCudaErrorAndThrow(cudaDestroyTextureObject(kv.second),
-					error_t::SSV_ERROR_UNKNOWN);
+				data_textures_.erase(kv.first);
+				CHECK_CUDA_ERROR_AND_THROW(cudaDestroyTextureObject(kv.second),
+					ssv_error(error_t::SSV_ERROR_UNKNOWN));
 				return;
 			}
 		}
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 }
 
 void BlobBase::clear()
 {
-	if (_data_cpu)
+	if (data_cpu_)
 	{
-		memset(_data_cpu, 0, size_cpu_in_bytes());
+		memset(data_cpu_, 0, size_cpu_in_bytes());
 	}
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
-	checkCudaErrorAndThrow(cudaMemset(_data_gpu.ptr, 0, size_gpu_in_bytes()),
-		error_t::SSV_ERROR_UNKNOWN);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY)));
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemset(data_gpu_.ptr, 0, size_gpu_in_bytes()),
+		ssv_error(ssv_error(error_t::SSV_ERROR_UNKNOWN)));
 }
 
-cudaTextureObject_t BlobBase::_CreateTexture2d(
+cudaTextureObject_t BlobBase::_CreateTexture2D(
 	const texture_param_t &params
 ) const
 {
 	unsigned char dimension;
-	struct cudaTextureDesc sTexDesc;
-	cudaChannelFormatDesc sChannelDesc; 
+	struct cudaTextureDesc tex_desc;
+	cudaChannelFormatDesc channel_desc;
 	size_t layer_id;
 
-	std::tie(sTexDesc, sChannelDesc, dimension, layer_id) = params;
+	std::tie(tex_desc, channel_desc, dimension, layer_id) = params;
 
-	if (dimension != 2u || layer_id >= _nz)
+	if (dimension != 2u || layer_id >= nz_)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 	}
 
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (storage_gpu_device_ < 0) throw ssv_error(ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED));
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
 
-	cudaResourceDesc sResDesc;
-	memset(&sResDesc, 0, sizeof(sResDesc));
-	sResDesc.resType = cudaResourceTypePitch2D;
-	sResDesc.res.pitch2D.desc = sChannelDesc;
-	sResDesc.res.pitch2D.devPtr = 
-		static_cast<byte *>(_data_gpu.ptr)
-		+ layer_id * _data_gpu.pitch * _data_gpu.ysize;
-	sResDesc.res.pitch2D.width = _data_gpu.xsize;
-	sResDesc.res.pitch2D.height = _data_gpu.ysize;
-	sResDesc.res.pitch2D.pitchInBytes = _data_gpu.pitch;
+	cudaResourceDesc res_desc;
+	memset(&res_desc, 0, sizeof(res_desc));
+	res_desc.resType = cudaResourceTypePitch2D;
+	res_desc.res.pitch2D.desc = channel_desc;
+	res_desc.res.pitch2D.devPtr =
+		static_cast<byte *>(data_gpu_.ptr)
+		+ layer_id * data_gpu_.pitch * data_gpu_.ysize;
+	res_desc.res.pitch2D.width = data_gpu_.xsize;
+	res_desc.res.pitch2D.height = data_gpu_.ysize;
+	res_desc.res.pitch2D.pitchInBytes = data_gpu_.pitch;
 
 	cudaTextureObject_t texture_object = 0;
-	checkCudaErrorAndThrow(cudaCreateTextureObject(&texture_object, &sResDesc, &sTexDesc, NULL),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	CHECK_CUDA_ERROR_AND_THROW(cudaCreateTextureObject(&texture_object, &res_desc, &tex_desc, NULL),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 
 	return texture_object;
 }
 
-cudaTextureObject_t BlobBase::_CreateTexture3d(
+cudaTextureObject_t BlobBase::_CreateTexture3D(
 	const texture_param_t &params
 ) const
 {
 	unsigned char dimension;
-	struct cudaTextureDesc sTexDesc;
-	cudaChannelFormatDesc sChannelDesc;
+	struct cudaTextureDesc s_tex_desc;
+	cudaChannelFormatDesc s_channel_desc;
 	size_t layer_id;
 
-	std::tie(sTexDesc, sChannelDesc, dimension, layer_id) = params;
+	std::tie(s_tex_desc, s_channel_desc, dimension, layer_id) = params;
 
 	if (dimension != 3u || layer_id != 0)
 	{
-		throw error_t::SSV_ERROR_INVALID_VALUE;
+		throw ssv_error(error_t::SSV_ERROR_INVALID_VALUE);
 	}
 
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (storage_gpu_device_ < 0) throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
 
-	if (!_data_cuda_array)
+	if (!data_cuda_array_)
 	{
 		size_t element_size_in_bytes =
-			(sChannelDesc.x + sChannelDesc.y + sChannelDesc.z + sChannelDesc.w) / 8u;
+			(s_channel_desc.x + s_channel_desc.y + s_channel_desc.z + s_channel_desc.w) / 8u;
 		cudaExtent extent_in_elements = make_cudaExtent(
-			_nx_in_bytes / element_size_in_bytes, _ny, _nz
+			nx_in_bytes_ / element_size_in_bytes, ny_, nz_
 		);
 
-		checkCudaErrorAndThrow(cudaMalloc3DArray(&_data_cuda_array, &sChannelDesc, extent_in_elements),
-			error_t::SSV_ERROR_OUT_OF_MEMORY_GPU);
+		CHECK_CUDA_ERROR_AND_THROW(cudaMalloc3DArray(&data_cuda_array_, &s_channel_desc, extent_in_elements),
+			ssv_error(error_t::SSV_ERROR_OUT_OF_MEMORY_GPU));
 	}
 
-	cudaResourceDesc sResDesc;
-	memset(&sResDesc, 0, sizeof(sResDesc));
-	sResDesc.resType = cudaResourceTypeArray;
-	sResDesc.res.array.array = _data_cuda_array;
+	cudaResourceDesc s_res_desc;
+	memset(&s_res_desc, 0, sizeof(s_res_desc));
+	s_res_desc.resType = cudaResourceTypeArray;
+	s_res_desc.res.array.array = data_cuda_array_;
 
 	cudaTextureObject_t texture_object = 0;
-	checkCudaErrorAndThrow(cudaCreateTextureObject(&texture_object, &sResDesc, &sTexDesc, NULL),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	CHECK_CUDA_ERROR_AND_THROW(cudaCreateTextureObject(&texture_object, &s_res_desc, &s_tex_desc, NULL),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 
 	return texture_object;
 }
 
 void BlobBase::_CopyToCudaArray() const
 {
-	if (_storage_gpu_device < 0) throw error_t::SSV_ERROR_NOT_INITIALIZED;
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
+	if (storage_gpu_device_ < 0) throw ssv_error(error_t::SSV_ERROR_NOT_INITIALIZED);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
 
 	cudaExtent extent_in_elements;
-	cudaArrayGetInfo(nullptr, &extent_in_elements, nullptr, _data_cuda_array);
+	cudaArrayGetInfo(nullptr, &extent_in_elements, nullptr, data_cuda_array_);
 
-	cudaMemcpy3DParms params = { 0 };
-	params.srcPtr = _data_gpu;
-	params.dstArray = _data_cuda_array;
+	cudaMemcpy3DParms params = {nullptr};
+	params.srcPtr = data_gpu_;
+	params.dstArray = data_cuda_array_;
 	params.kind = cudaMemcpyDeviceToDevice;
 	params.extent = extent_in_elements;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 }
 
 BlobBase::texture_param_t BlobBase::_MakeTextureParam(
-	const cudaTextureDesc * texDesc, const cudaChannelFormatDesc * channelDesc, 
+	const cudaTextureDesc *tex_desc, const cudaChannelFormatDesc *channel_desc,
 	unsigned char dimension, uint layer_id
 )
 {
-	struct cudaTextureDesc sTexDesc;
-	if (texDesc == nullptr)
+	struct cudaTextureDesc s_tex_desc;
+	if (tex_desc == nullptr)
 	{
-		memset(&sTexDesc, 0, sizeof(sTexDesc));
-		sTexDesc.addressMode[0] = cudaAddressModeClamp;
-		sTexDesc.addressMode[1] = cudaAddressModeClamp;
-		sTexDesc.addressMode[2] = cudaAddressModeClamp;
-		sTexDesc.filterMode = cudaFilterModeLinear;
-		sTexDesc.readMode = cudaReadModeElementType;
-		sTexDesc.normalizedCoords = 0;
-		texDesc = &sTexDesc;
+		memset(&s_tex_desc, 0, sizeof(s_tex_desc));
+		s_tex_desc.addressMode[0] = cudaAddressModeClamp;
+		s_tex_desc.addressMode[1] = cudaAddressModeClamp;
+		s_tex_desc.addressMode[2] = cudaAddressModeClamp;
+		s_tex_desc.filterMode = cudaFilterModeLinear;
+		s_tex_desc.readMode = cudaReadModeElementType;
+		s_tex_desc.normalizedCoords = 0;
+		tex_desc = &s_tex_desc;
 	}
 
-	cudaChannelFormatDesc sChannelDesc;
-	if (channelDesc == nullptr)
+	if (channel_desc == nullptr)
 	{
-		sChannelDesc = cudaCreateChannelDesc<byte>();
-		channelDesc = &sChannelDesc;
+		cudaChannelFormatDesc s_channel_desc = cudaCreateChannelDesc<byte>();
+		channel_desc = &s_channel_desc;
 	}
 
-	return std::make_tuple(*texDesc, *channelDesc, dimension, layer_id);
+	return std::make_tuple(*tex_desc, *channel_desc, dimension, layer_id);
 }
 
 void BlobBase::_InitCuda(int gpu_device)
 {
 	if (gpu_device < 0)
 	{
-		_storage_gpu_device = -1;
-		memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
-		memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
-		_data_texture_default_2d = 0;
-		_data_texture_default_3d = 0;
-		_data_textures.clear();
-		_data_cuda_array = nullptr;
+		storage_gpu_device_ = -1;
+		memset(&data_gpu_extent_, 0, sizeof(cudaExtent));
+		memset(&data_gpu_, 0, sizeof(cudaPitchedPtr));
+		data_texture_default_2d_ = 0;
+		data_texture_default_3d_ = 0;
+		data_textures_.clear();
+		data_cuda_array_ = nullptr;
 	}
 	else
 	{
-		_storage_gpu_device = gpu_device;
-		_data_gpu_extent = make_cudaExtent(_nx_in_bytes,_ny, _nz);
+		storage_gpu_device_ = gpu_device;
+		data_gpu_extent_ = make_cudaExtent(nx_in_bytes_, ny_, nz_);
 
-		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-			error_t::SSV_ERROR_DEVICE_NOT_READY);
-		checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
-			error_t::SSV_ERROR_OUT_OF_MEMORY_GPU);
-		checkCudaErrorAndThrow(cudaMemset(_data_gpu.ptr, 0, size_gpu_in_bytes()),
-			error_t::SSV_ERROR_UNKNOWN);
+		CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+			ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
+		CHECK_CUDA_ERROR_AND_THROW(cudaMalloc3D(&data_gpu_, data_gpu_extent_),
+			ssv_error(error_t::SSV_ERROR_OUT_OF_MEMORY_GPU));
+		CHECK_CUDA_ERROR_AND_THROW(cudaMemset(data_gpu_.ptr, 0, size_gpu_in_bytes()),
+			ssv_error(error_t::SSV_ERROR_UNKNOWN));
 
-		_data_texture_default_2d = 0;
-		_data_texture_default_3d = 0;
-		_data_textures.clear();
-		_data_cuda_array = nullptr;
+		data_texture_default_2d_ = 0;
+		data_texture_default_3d_ = 0;
+		data_textures_.clear();
+		data_cuda_array_ = nullptr;
 	}
 }
 
 void BlobBase::_CopyCuda(const BlobBase &other, int gpu_device)
 {
-	_storage_gpu_device = gpu_device;
-	_data_gpu_extent = other._data_gpu_extent;
+	storage_gpu_device_ = gpu_device;
+	data_gpu_extent_ = other.data_gpu_extent_;
 
-	checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-		error_t::SSV_ERROR_DEVICE_NOT_READY);
-	checkCudaErrorAndThrow(cudaMalloc3D(&_data_gpu, _data_gpu_extent),
-		error_t::SSV_ERROR_OUT_OF_MEMORY_GPU);
+	CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+		ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
+	CHECK_CUDA_ERROR_AND_THROW(cudaMalloc3D(&data_gpu_, data_gpu_extent_),
+		ssv_error(error_t::SSV_ERROR_OUT_OF_MEMORY_GPU));
 
-	cudaMemcpy3DParms params = { 0 };
-	params.srcPtr = other._data_gpu;
-	params.dstPtr = _data_gpu;
+	cudaMemcpy3DParms params = {nullptr};
+	params.srcPtr = other.data_gpu_;
+	params.dstPtr = data_gpu_;
 	params.kind = cudaMemcpyDeviceToDevice;
-	params.extent = _data_gpu_extent;
-	checkCudaErrorAndThrow(cudaMemcpy3D(&params),
-		error_t::SSV_ERROR_INVALID_VALUE);
+	params.extent = data_gpu_extent_;
+	CHECK_CUDA_ERROR_AND_THROW(cudaMemcpy3D(&params),
+		ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 
-	_data_texture_default_2d = 0;
-	_data_texture_default_3d = 0;
-	_data_textures.clear();
-	_data_cuda_array = nullptr;
+	data_texture_default_2d_ = 0;
+	data_texture_default_3d_ = 0;
+	data_textures_.clear();
+	data_cuda_array_ = nullptr;
 }
 
 void BlobBase::_MoveCuda(BlobBase &&other)
 {
-	_storage_gpu_device = other._storage_gpu_device;
-	_data_gpu_extent = other._data_gpu_extent;
-	_data_gpu = other._data_gpu;
-	_data_texture_default_2d = other._data_texture_default_2d;
-	_data_texture_default_3d = other._data_texture_default_3d;
-	_data_textures = std::move(other._data_textures);
-	_data_cuda_array = other._data_cuda_array;
+	storage_gpu_device_ = other.storage_gpu_device_;
+	data_gpu_extent_ = other.data_gpu_extent_;
+	data_gpu_ = other.data_gpu_;
+	data_texture_default_2d_ = other.data_texture_default_2d_;
+	data_texture_default_3d_ = other.data_texture_default_3d_;
+	data_textures_ = std::move(other.data_textures_);
+	data_cuda_array_ = other.data_cuda_array_;
 
-	memset(&other._data_gpu, 0, sizeof(cudaPitchedPtr));
-	memset(&other._data_gpu_extent, 0, sizeof(cudaExtent));
-	other._storage_gpu_device = -1;
-	other._data_texture_default_2d = 0;
-	other._data_texture_default_3d = 0;
-	other._data_textures.clear();
-	other._data_cuda_array = nullptr;
+	memset(&other.data_gpu_, 0, sizeof(cudaPitchedPtr));
+	memset(&other.data_gpu_extent_, 0, sizeof(cudaExtent));
+	other.storage_gpu_device_ = -1;
+	other.data_texture_default_2d_ = 0;
+	other.data_texture_default_3d_ = 0;
+	other.data_textures_.clear();
+	other.data_cuda_array_ = nullptr;
 }
 
 void BlobBase::_DestroyCuda()
 {
-	if (_storage_gpu_device >= 0)
+	if (storage_gpu_device_ >= 0)
 	{
-		checkCudaErrorAndThrow(cudaSetDevice(_storage_gpu_device),
-			error_t::SSV_ERROR_DEVICE_NOT_READY);
-		if (_data_gpu.ptr)
+		CHECK_CUDA_ERROR_AND_THROW(cudaSetDevice(storage_gpu_device_),
+			ssv_error(error_t::SSV_ERROR_DEVICE_NOT_READY));
+		if (data_gpu_.ptr)
 		{
-			checkCudaErrorAndThrow(cudaFree(_data_gpu.ptr),
-				error_t::SSV_ERROR_INVALID_VALUE);
+			CHECK_CUDA_ERROR_AND_THROW(cudaFree(data_gpu_.ptr),
+				ssv_error(error_t::SSV_ERROR_INVALID_VALUE));
 		}
-		destroyTexture();
+		destroy_texture();
 	}
 
-	memset(&_data_gpu, 0, sizeof(cudaPitchedPtr));
-	memset(&_data_gpu_extent, 0, sizeof(cudaExtent));
-	_storage_gpu_device = -1;
-	_data_texture_default_2d = 0;
-	_data_texture_default_3d = 0;
-	_data_textures.clear();
-	_data_cuda_array = nullptr;
+	memset(&data_gpu_, 0, sizeof(cudaPitchedPtr));
+	memset(&data_gpu_extent_, 0, sizeof(cudaExtent));
+	storage_gpu_device_ = -1;
+	data_texture_default_2d_ = 0;
+	data_texture_default_3d_ = 0;
+	data_textures_.clear();
+	data_cuda_array_ = nullptr;
 }

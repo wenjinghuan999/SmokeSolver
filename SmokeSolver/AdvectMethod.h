@@ -28,13 +28,13 @@ namespace ssv
 		// 2D
 		template <typename QType>
 		void operator()(
-			Blob<QType> &qout, const Blob<QType> &q, const Blob<T2> &u
-			) const;
+			Blob<QType> &qout, const Blob<QType> &q, const Blob<real2> &u
+		) const;
 		// 3D
 		template <typename QType>
 		void operator()(
-			Blob<QType> &qout, const Blob<QType> &q, const Blob<T4> &u
-			) const;
+			Blob<QType> &qout, const Blob<QType> &q, const Blob<real4> &u
+		) const;
 	};
 }
 
