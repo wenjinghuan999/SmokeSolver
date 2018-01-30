@@ -65,6 +65,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Smoke2dGetDataParams, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Smoke2dGetDataParams, property_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Result, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -83,8 +84,8 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] = {
   { 10, -1, sizeof(Smoke2dResetParams)},
   { 14, -1, sizeof(Smoke2dDestroyParams)},
   { 18, -1, sizeof(Smoke2dGetDataParams)},
-  { 22, -1, sizeof(Result)},
-  { 27, -1, sizeof(DataChunk)},
+  { 23, -1, sizeof(Result)},
+  { 28, -1, sizeof(DataChunk)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -160,19 +161,19 @@ void AddDescriptorsImpl() {
       "\n\rSmoke2d.proto\022\003ssv\"+\n\021Smoke2dInitParam"
       "s\022\n\n\002nx\030\001 \001(\r\022\n\n\002ny\030\002 \001(\r\"\023\n\021Smoke2dStep"
       "Params\"\024\n\022Smoke2dResetParams\"\026\n\024Smoke2dD"
-      "estroyParams\"\026\n\024Smoke2dGetDataParams\"\030\n\006"
-      "Result\022\016\n\006status\030\001 \001(\r\"\031\n\tDataChunk\022\014\n\004d"
-      "ata\030\001 \001(\0142\207\002\n\007Smoke2d\022-\n\004Init\022\026.ssv.Smok"
-      "e2dInitParams\032\013.ssv.Result\"\000\022-\n\004Step\022\026.s"
-      "sv.Smoke2dStepParams\032\013.ssv.Result\"\000\022/\n\005R"
-      "eset\022\027.ssv.Smoke2dResetParams\032\013.ssv.Resu"
-      "lt\"\000\0223\n\007Destroy\022\031.ssv.Smoke2dDestroyPara"
-      "ms\032\013.ssv.Result\"\000\0228\n\007GetData\022\031.ssv.Smoke"
-      "2dGetDataParams\032\016.ssv.DataChunk\"\0000\001b\006pro"
-      "to3"
+      "estroyParams\"(\n\024Smoke2dGetDataParams\022\020\n\010"
+      "property\030\001 \001(\r\"\030\n\006Result\022\016\n\006status\030\001 \001(\r"
+      "\"\031\n\tDataChunk\022\014\n\004data\030\001 \001(\0142\207\002\n\007Smoke2d\022"
+      "-\n\004Init\022\026.ssv.Smoke2dInitParams\032\013.ssv.Re"
+      "sult\"\000\022-\n\004Step\022\026.ssv.Smoke2dStepParams\032\013"
+      ".ssv.Result\"\000\022/\n\005Reset\022\027.ssv.Smoke2dRese"
+      "tParams\032\013.ssv.Result\"\000\0223\n\007Destroy\022\031.ssv."
+      "Smoke2dDestroyParams\032\013.ssv.Result\"\000\0228\n\007G"
+      "etData\022\031.ssv.Smoke2dGetDataParams\032\016.ssv."
+      "DataChunk\"\0000\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 483);
+      descriptor, 501);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Smoke2d.proto", &protobuf_RegisterTypes);
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
@@ -977,6 +978,7 @@ void Smoke2dDestroyParams::InternalSwap(Smoke2dDestroyParams* other) {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Smoke2dGetDataParams::kPropertyFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Smoke2dGetDataParams::Smoke2dGetDataParams()
@@ -992,10 +994,12 @@ Smoke2dGetDataParams::Smoke2dGetDataParams(const Smoke2dGetDataParams& from)
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  property_ = from.property_;
   // @@protoc_insertion_point(copy_constructor:ssv.Smoke2dGetDataParams)
 }
 
 void Smoke2dGetDataParams::SharedCtor() {
+  property_ = 0u;
   _cached_size_ = 0;
 }
 
@@ -1032,6 +1036,7 @@ Smoke2dGetDataParams* Smoke2dGetDataParams::New(::google::protobuf::Arena* arena
 
 void Smoke2dGetDataParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:ssv.Smoke2dGetDataParams)
+  property_ = 0u;
 }
 
 bool Smoke2dGetDataParams::MergePartialFromCodedStream(
@@ -1043,13 +1048,31 @@ bool Smoke2dGetDataParams::MergePartialFromCodedStream(
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
-  handle_unusual:
-    if (tag == 0 ||
-        ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-        ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-      goto success;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // uint32 property = 1;
+      case 1: {
+        if (tag == 8u) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &property_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
     }
-    DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
   }
 success:
   // @@protoc_insertion_point(parse_success:ssv.Smoke2dGetDataParams)
@@ -1063,6 +1086,11 @@ failure:
 void Smoke2dGetDataParams::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:ssv.Smoke2dGetDataParams)
+  // uint32 property = 1;
+  if (this->property() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->property(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:ssv.Smoke2dGetDataParams)
 }
 
@@ -1070,6 +1098,11 @@ void Smoke2dGetDataParams::SerializeWithCachedSizes(
     bool deterministic, ::google::protobuf::uint8* target) const {
   (void)deterministic;  // Unused
   // @@protoc_insertion_point(serialize_to_array_start:ssv.Smoke2dGetDataParams)
+  // uint32 property = 1;
+  if (this->property() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->property(), target);
+  }
+
   // @@protoc_insertion_point(serialize_to_array_end:ssv.Smoke2dGetDataParams)
   return target;
 }
@@ -1077,6 +1110,13 @@ void Smoke2dGetDataParams::SerializeWithCachedSizes(
 size_t Smoke2dGetDataParams::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:ssv.Smoke2dGetDataParams)
   size_t total_size = 0;
+
+  // uint32 property = 1;
+  if (this->property() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->property());
+  }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
@@ -1104,6 +1144,9 @@ void Smoke2dGetDataParams::MergeFrom(const Smoke2dGetDataParams& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:ssv.Smoke2dGetDataParams)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  if (from.property() != 0) {
+    set_property(from.property());
+  }
 }
 
 void Smoke2dGetDataParams::CopyFrom(const ::google::protobuf::Message& from) {
@@ -1129,6 +1172,7 @@ void Smoke2dGetDataParams::Swap(Smoke2dGetDataParams* other) {
   InternalSwap(other);
 }
 void Smoke2dGetDataParams::InternalSwap(Smoke2dGetDataParams* other) {
+  std::swap(property_, other->property_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -1139,6 +1183,20 @@ void Smoke2dGetDataParams::InternalSwap(Smoke2dGetDataParams* other) {
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Smoke2dGetDataParams
+
+// uint32 property = 1;
+void Smoke2dGetDataParams::clear_property() {
+  property_ = 0u;
+}
+::google::protobuf::uint32 Smoke2dGetDataParams::property() const {
+  // @@protoc_insertion_point(field_get:ssv.Smoke2dGetDataParams.property)
+  return property_;
+}
+void Smoke2dGetDataParams::set_property(::google::protobuf::uint32 value) {
+  
+  property_ = value;
+  // @@protoc_insertion_point(field_set:ssv.Smoke2dGetDataParams.property)
+}
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 

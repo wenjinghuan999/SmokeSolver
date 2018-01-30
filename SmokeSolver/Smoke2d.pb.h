@@ -453,10 +453,17 @@ class Smoke2dGetDataParams : public ::google::protobuf::Message /* @@protoc_inse
 
   // accessors -------------------------------------------------------
 
+  // uint32 property = 1;
+  void clear_property();
+  static const int kPropertyFieldNumber = 1;
+  ::google::protobuf::uint32 property() const;
+  void set_property(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:ssv.Smoke2dGetDataParams)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::uint32 property_;
   mutable int _cached_size_;
   friend struct  protobuf_Smoke2d_2eproto::TableStruct;
 };
@@ -685,6 +692,20 @@ inline void Smoke2dInitParams::set_ny(::google::protobuf::uint32 value) {
 // -------------------------------------------------------------------
 
 // Smoke2dGetDataParams
+
+// uint32 property = 1;
+inline void Smoke2dGetDataParams::clear_property() {
+  property_ = 0u;
+}
+inline ::google::protobuf::uint32 Smoke2dGetDataParams::property() const {
+  // @@protoc_insertion_point(field_get:ssv.Smoke2dGetDataParams.property)
+  return property_;
+}
+inline void Smoke2dGetDataParams::set_property(::google::protobuf::uint32 value) {
+  
+  property_ = value;
+  // @@protoc_insertion_point(field_set:ssv.Smoke2dGetDataParams.property)
+}
 
 // -------------------------------------------------------------------
 

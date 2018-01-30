@@ -25,6 +25,14 @@ namespace ssv
 			CELL_TYPE_WALL = 'w',
 			CELL_TYPE_SOURCE = 's'
 		};
+		enum class Property : byte
+		{
+			PROPERTY_NONE = 0,
+			PROPERTY_DENSITY = 1,
+			PROPERTY_TEMPERATURE = 2,
+			PROPERTY_VELOCITY = 4,
+			PROPERTY_ALL = 7,
+		};
 
 	public:
 		Smoke2DSolver() = default;
@@ -115,7 +123,7 @@ namespace ssv
 		/** \brief Generate random density field and velocity field in region */
 		void gen_noise();
 
-		void *get_data(size_t *size = nullptr);
+		void *get_data(Property property = Property::PROPERTY_ALL, size_t *size = nullptr);
 		void save_data(const std::string &filename);
 
 	public:
@@ -143,7 +151,6 @@ namespace ssv
 		Blob<real> temp1_a_, temp1_b_;
 		Blob<real2> temp2_c_, temp2_d_;
 		int ping_{};
-		int get_data_ping_{};
 	};
 }
 

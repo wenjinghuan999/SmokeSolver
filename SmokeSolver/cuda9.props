@@ -12,6 +12,9 @@
     <Link>
       <AdditionalDependencies>cuda.lib;cudart.lib;cublas.lib;cusparse.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <AdditionalOptions>--expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

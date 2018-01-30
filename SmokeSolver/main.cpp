@@ -13,6 +13,52 @@ using namespace ssv;
 
 namespace
 {
+	Smoke2DSolver solver;
+	void solver_init(uint nx, uint ny)
+	{
+		solver.set_size(nx, ny);
+		solver.set_advect(AdvectMethodMacCormack());
+		solver.set_euler(EulerMethodForward());
+		// solver.setPoissonMethod(PoissonMethodVCycle(3, 700, 0.4));
+		solver.set_poisson(PoissonMethodCG(100));
+		solver.set_boundary_density(make_boundary_all(make_boundary_op_clamp(
+			Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f
+		)));
+		solver.set_boundary_density(make_boundary_all(make_boundary_op_clamp2(
+			Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f, 
+			Smoke2DSolver::CellType::CELL_TYPE_SOURCE, 1.f
+		)));
+		solver.set_boundary_velocity(make_boundary_all(make_boundary_op_clamp2(
+			Smoke2DSolver::CellType::CELL_TYPE_WALL, make_real2(0.f, 0.f), 
+			Smoke2DSolver::CellType::CELL_TYPE_SOURCE, make_real2(0.f, 0.f)
+		)));
+		solver.set_force(ForceMethodSimple(0.0015f, 0.125f, 0.f));
+
+		solver.init();
+		solver.gen_noise();
+		//solver.add_source(params->nx()/2-2, params->nx()/2+1, 0, 2);
+	}
+	void solver_step()
+	{
+		solver.step();
+	}
+	void solver_reset()
+	{
+		solver.gen_noise();
+	}
+	void solver_destory()
+	{
+		solver.destory();
+	}
+	void *solver_get_data(uint property, size_t *size = nullptr)
+	{
+		return solver.get_data(
+			static_cast<ssv::Smoke2DSolver::Property>(property), size);
+	}
+}
+
+namespace
+{
 	const size_t DATA_CHUNK_SIZE = 65536u;
 
 	/// ================== CLIENT ======================
@@ -60,9 +106,10 @@ namespace
 			_PrintGrpcError("destroy", result.status());
 		}
 
-		size_t get_data(void *data_buffer) const
+		size_t get_data(uint property, void *data_buffer) const
 		{
 			Smoke2dGetDataParams params;
+			params.set_property(property);
 			grpc::ClientContext context;
 			std::unique_ptr<grpc::ClientReader<DataChunk> > reader(
 				stub_->GetData(&context, params));
@@ -108,27 +155,7 @@ namespace
 			result->set_status(0);
 			try
 			{
-				solver_.set_size(params->nx(), params->ny());
-				solver_.set_advect(AdvectMethodSemiLagrangian());
-				solver_.set_euler(EulerMethodForward());
-				// solver.setPoissonMethod(PoissonMethodVCycle(3, 700, 0.4));
-				solver_.set_poisson(PoissonMethodCG(100));
-				solver_.set_boundary_density(make_boundary_all(make_boundary_op_clamp(
-					Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f
-				)));
-				solver_.set_boundary_density(make_boundary_all(make_boundary_op_clamp2(
-					Smoke2DSolver::CellType::CELL_TYPE_WALL, 0.f, 
-					Smoke2DSolver::CellType::CELL_TYPE_SOURCE, 1.f
-				)));
-				solver_.set_boundary_velocity(make_boundary_all(make_boundary_op_clamp2(
-					Smoke2DSolver::CellType::CELL_TYPE_WALL, make_real2(0.f, 0.f), 
-					Smoke2DSolver::CellType::CELL_TYPE_SOURCE, make_real2(0.f, 0.f)
-				)));
-				solver_.set_force(ForceMethodSimple(0.0015f, 0.125f, 0.f));
-
-				solver_.init();
-				solver_.gen_noise();
-				//solver.add_source(params->nx()/2-2, params->nx()/2+1, 0, 2);
+				solver_init(params->nx(), params->ny());
 			}
 			catch (ssv_error &e)
 			{
@@ -146,7 +173,7 @@ namespace
 			result->set_status(0);
 			try
 			{
-				solver_.step();
+				solver_step();
 			}
 			catch (ssv_error &e)
 			{
@@ -164,7 +191,7 @@ namespace
 			result->set_status(0);
 			try
 			{
-				solver_.gen_noise();
+				solver_reset();
 			}
 			catch (ssv_error &e)
 			{
@@ -182,7 +209,7 @@ namespace
 			result->set_status(0);
 			try
 			{
-				solver_.destory();
+				solver_destory();
 			}
 			catch (ssv_error &e)
 			{
@@ -202,7 +229,7 @@ namespace
 			byte *data = nullptr;
 			try
 			{
-				data = static_cast<byte *>(solver_.get_data(&size));
+				data = static_cast<byte *>(solver_get_data(params->property(), &size));
 			}
 			catch (ssv_error &e)
 			{
@@ -224,9 +251,6 @@ namespace
 
 			return grpc::Status::OK;
 		}
-
-	private:
-		Smoke2DSolver solver_;
 	};
 }
 
@@ -302,7 +326,7 @@ int main(int argc, const char **argv)
 	//client.init(16, 16);
 	//client.step();
 	//real *data_client = new real[16*16];
-	//size_t size = client.getData(data_client);
+	//size_t size = client.getData(1, data_client);
 	//std::cout << "Client received data: " << size << std::endl;
 	//output::PrintRawCPU(data_client, 16 * 16, "data_client");
 

@@ -29,7 +29,7 @@ message Smoke2dDestroyParams {
 }
 
 message Smoke2dGetDataParams {
-
+	uint32 property = 1;
 }
 
 message Result {

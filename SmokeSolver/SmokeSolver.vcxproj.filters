@@ -54,17 +54,17 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Smoke2d.grpc.pb.cc">
-      <Filter>Smoke2d</Filter>
-    </ClCompile>
-    <ClCompile Include="Smoke2d.pb.cc">
-      <Filter>Smoke2d</Filter>
-    </ClCompile>
     <ClCompile Include="Smoke2dSolver.cpp">
       <Filter>Smoke2dSolver</Filter>
     </ClCompile>
     <ClCompile Include="BlobBase.cpp">
       <Filter>Blob</Filter>
+    </ClCompile>
+    <ClCompile Include="Smoke2d.grpc.pb.cc">
+      <Filter>Smoke2d</Filter>
+    </ClCompile>
+    <ClCompile Include="Smoke2d.pb.cc">
+      <Filter>Smoke2d</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,12 +74,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Smoke2d.grpc.pb.h">
-      <Filter>Smoke2d</Filter>
-    </ClInclude>
-    <ClInclude Include="Smoke2d.pb.h">
-      <Filter>Smoke2d</Filter>
-    </ClInclude>
     <ClInclude Include="common.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -127,6 +121,12 @@
     </ClInclude>
     <ClInclude Include="BlobMath.h">
       <Filter>BlobMath</Filter>
+    </ClInclude>
+    <ClInclude Include="Smoke2d.grpc.pb.h">
+      <Filter>Smoke2d</Filter>
+    </ClInclude>
+    <ClInclude Include="Smoke2d.pb.h">
+      <Filter>Smoke2d</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

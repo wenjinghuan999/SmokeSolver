@@ -33,7 +33,6 @@ void Smoke2DSolver::init()
 	tp_.sync_cpu_to_gpu();
 
 	ping_ = 0;
-	get_data_ping_ = 0;
 }
 
 void Smoke2DSolver::add_source(uint x0, uint x1, uint y0, uint y1)
@@ -57,29 +56,28 @@ void Smoke2DSolver::gen_noise()
 	offset = make_real2(dis(gen), dis(gen));
 	simplex_2d(rh_[ping_], make_real2(16.f, 16.f), offset);
 	simplex_2d(tm_[ping_], make_real2(16.f, 16.f), offset);
-
-	get_data_ping_ = 0;
 }
 
-void *Smoke2DSolver::get_data(size_t *size)
+void *Smoke2DSolver::get_data(Property property, size_t *size)
 {
-	if (get_data_ping_ == 0)
+	switch (property)
 	{
-		get_data_ping_ ^= 1;
-		if (size != nullptr)
-		{
-			*size = rh_[ping_].size_cpu_in_bytes();
-		}
+	case Property::PROPERTY_DENSITY:
+		if (size != nullptr) *size = rh_[ping_].size_cpu_in_bytes();
 		rh_[ping_].sync_gpu_to_cpu();
 		return rh_[ping_].data_cpu();
+	case Property::PROPERTY_TEMPERATURE:
+		if (size != nullptr) *size = tm_[ping_].size_cpu_in_bytes();
+		tm_[ping_].sync_gpu_to_cpu();
+		return tm_[ping_].data_cpu();
+	case Property::PROPERTY_VELOCITY:
+		if (size != nullptr) *size = u_.size_cpu_in_bytes();
+		u_.sync_gpu_to_cpu();
+		return u_.data_cpu();
+	default:
+		if (size != nullptr) *size = 0;
+		return nullptr;
 	}
-	get_data_ping_ ^= 1;
-	if (size != nullptr)
-	{
-		*size = u_.size_cpu_in_bytes();
-	}
-	u_.sync_gpu_to_cpu();
-	return u_.data_cpu();
 }
 
 void Smoke2DSolver::save_data(const std::string &filename)
@@ -119,7 +117,7 @@ void Smoke2DSolver::step()
 	neg(temp1_a);
 	temp1_b *= w;
 	zip(f, temp1_b, temp1_a);
-	f *= make_real2(1.2f, 1.2f);
+	f *= make_real2(0.5f, 0.5f);
 
 	euler_vel_(u, f);
 
