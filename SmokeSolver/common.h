@@ -65,16 +65,6 @@ namespace ssv
 
 	public:
 		error_t err;
-
-#if _HAS_EXCEPTIONS
-
-#else /* _HAS_EXCEPTIONS */
-	protected:
-		virtual void _Doraise() const
-		{	// perform class-specific exception handling
-			_RAISE(*this);
-		}
-#endif /* _HAS_EXCEPTIONS */
 	};
 
 	template <typename EnumType>
