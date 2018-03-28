@@ -126,11 +126,11 @@ void Smoke2DSolver::step()
 	euler_vel_(u, u1);
 
 	laplacian_2d(temp1_a, rh);
-	temp1_a *= 0.01f;
+	temp1_a *= 0.1f;
 	euler_den_(rh, temp1_a);
 
 	laplacian_2d(temp1_a, tm);
-	temp1_a *= 0.01f;
+	temp1_a *= 0.1f;
 	euler_den_(tm, temp1_a);
 
 	advect_den_(rh2, rh, u);

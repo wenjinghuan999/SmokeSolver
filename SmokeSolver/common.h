@@ -58,16 +58,6 @@ namespace ssv
 	public:
 		typedef std::exception mybase_t;
 
-		explicit ssv_error(error_t err, const std::string &what_arg)
-			: mybase_t(what_arg.c_str()), err(err)
-		{
-		}
-
-		explicit ssv_error(error_t err, const char *what_arg)
-			: mybase_t(what_arg), err(err)
-		{
-		}
-
 		explicit ssv_error(error_t err)
 			: err(err)
 		{
