@@ -108,16 +108,24 @@ void Smoke2DSolver::step()
 	euler_vel_(u, f);
 
 	curl(w, u);
-	temp1_a = w;
-	abs(temp1_a);
-	gradient(eta, temp1_a);
+	temp1a = w;
+	abs(temp1a);
+	gradient(eta, temp1a);
 	normalize(eta);
-	unzip(temp1_a, temp1_b, eta);
-	temp1_a *= w;
-	neg(temp1_a);
-	temp1_b *= w;
-	zip(f, temp1_b, temp1_a);
-	f *= make_real2(0.5f, 0.5f);
+	unzip(temp1a, temp1b, eta);
+	temp1a *= w;
+	neg(temp1a);
+	temp1b *= w;
+	zip(f, temp1b, temp1a);
+	f *= make_T2(1.2f, 1.2f);
+
+	_euler2(u, f);
+
+	//u.syncGpu2Cpu(); output::PrintBlobCPU(u, "u");
+
+	laplacian2d(u1, u);
+	u1 *= make_T2(0.2f, 0.2f);
+	_euler2(u, u1);
 
 	euler_vel_(u, f);
 
